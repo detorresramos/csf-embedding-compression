@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Hashtable;
 
 class Csf {
 
@@ -89,12 +90,22 @@ class Csf {
         return codebooks;
     }
 
+    static Hashtable<String, Integer[]> createEmbeddingHashtable(String keys[], Integer quantized[][]) {
+        Hashtable<String, Integer[]> wordsToEmbeddings = new Hashtable<String, Integer[]>(130000);
+        for (int i = 0; i < keys.length; i++) {
+            wordsToEmbeddings.put(keys[i], quantized[i]);
+        }
+        return wordsToEmbeddings;
+    }
+
     public static void main(String args[]) {
         System.out.println("HELLO WORLD");
 
         String keys[] = readKeys();
         Integer quantized[][] = readQuantized();
         Float codebooks[][][] = readCodebooks();
+
+        Hashtable<String, Integer[]> wordsToEmbeddings = createEmbeddingHashtable(keys, quantized);
 
     }
 }
