@@ -86,5 +86,5 @@ quantized, codebooks = product_quantization(embeddings, M=20, k=256)
 np.savetxt('data/word2vec/keys.txt', np.array(keys), fmt="%s")
 np.savetxt('data/word2vec/quantized.txt', quantized, fmt='%i')
 np.savetxt('data/word2vec/codebooks.txt',
-           np.array(codebooks).reshape(np.array(codebooks).shape[0], -1), fmt='%i')
+           np.array(codebooks).reshape(np.array(codebooks).shape[0], -1), fmt='%1.3f')
 print(len(codebooks[0][0]))
