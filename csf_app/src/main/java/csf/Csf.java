@@ -4,7 +4,16 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Spliterators;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+import it.unimi.dsi.fastutil.longs.LongIterable;
+import it.unimi.dsi.fastutil.longs.LongIterator;
+import it.unimi.dsi.sux4j.mph.GV3CompressedFunction;
 
 class Csf {
 
@@ -29,8 +38,28 @@ class Csf {
         return keys;
     }
 
-    static Integer[][] readQuantized() {
+    static class QuantizedResult {
+        private final Integer[][] first;
+        private final Long[][] second;
+
+        public QuantizedResult(Integer[][] first, Long[][] second) {
+            this.first = first;
+            this.second = second;
+        }
+
+        public Integer[][] getQuantizedVectors() {
+            return first;
+        }
+
+        public Long[][] getCsfCentroidIndies() {
+            return second;
+        }
+    }
+
+    static QuantizedResult readQuantized() {
         Integer quantizedVectors[][] = new Integer[100000][5];
+
+        Long csfCentroidIndies[][] = new Long[5][100000];
 
         try {
             File file = new File("../data/word2vec/quantized.txt");
@@ -38,11 +67,13 @@ class Csf {
 
             int i = 0;
             String input = null;
+
             while ((input = reader.readLine()) != null) {
                 String[] splited = input.split("\\s+");
                 Integer[] vector = new Integer[5];
                 for (int j = 0; j < splited.length; j++) {
                     vector[j] = Integer.parseInt(splited[j]);
+                    csfCentroidIndies[j][i] = Long.parseLong(splited[j]);
                 }
                 quantizedVectors[i] = vector;
                 i++;
@@ -52,7 +83,7 @@ class Csf {
             e.printStackTrace();
         }
 
-        return quantizedVectors;
+        return new QuantizedResult(quantizedVectors, csfCentroidIndies);
     }
 
     static Float[][][] readCodebooks() {
@@ -104,8 +135,28 @@ class Csf {
         System.out.println("HELLO WORLD");
 
         String keys[] = readKeys();
-        Integer quantized[][] = readQuantized();
+        Iterable<String> keysIterable = Arrays.asList(keys);
+
+        QuantizedResult result = readQuantized();
+
+        Integer quantized[][] = result.getQuantizedVectors();
+        final Long csfCentroidIndies[][] = result.getCsfCentroidIndies();
+
+        LongIterable centroidIndicesIterable[] = new LongIterable[5];
+        for (int i = 0; i < 5; i++) {
+            final int ii = i;
+            centroidIndicesIterable[i] = new LongIterable() {
+
+                @Override
+                public LongIterator iterator() {
+                    return (LongIterator) Arrays.asList(csfCentroidIndies[ii]).iterator();
+                }
+            };
+        }
+
         Float codebooks[][][] = readCodebooks();
+
+        GV3CompressedFunction.Builder<String> csf = new GV3CompressedFunction.Builder<>();
 
         Hashtable<String, Integer[]> wordsToEmbeddings = createEmbeddingHashtable(keys, quantized);
 
