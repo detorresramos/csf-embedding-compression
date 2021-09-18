@@ -4,12 +4,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Spliterators;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import it.unimi.dsi.fastutil.longs.LongIterable;
 import it.unimi.dsi.fastutil.longs.LongIterator;
@@ -138,27 +135,42 @@ class Csf {
         Iterable<String> keysIterable = Arrays.asList(keys);
 
         QuantizedResult result = readQuantized();
-
         Integer quantized[][] = result.getQuantizedVectors();
         final Long csfCentroidIndies[][] = result.getCsfCentroidIndies();
 
-        LongIterable centroidIndicesIterable[] = new LongIterable[5];
-        for (int i = 0; i < 5; i++) {
-            final int ii = i;
-            centroidIndicesIterable[i] = new LongIterable() {
+        // // values for CSFs
+        // ArrayList<LongIterable> centroidIndicesIterable = new ArrayList<>();
+        // System.out.println("GOT HERE");
+        // for (int i = 0; i < 5; i++) {
+        // final int ii = i;
+        // centroidIndicesIterable.add(new LongIterable() {
 
-                @Override
-                public LongIterator iterator() {
-                    return (LongIterator) Arrays.asList(csfCentroidIndies[ii]).iterator();
-                }
-            };
+        // @Override
+        // public LongIterator iterator() {
+        // return (LongIterator) Arrays.asList(csfCentroidIndies[ii]).iterator();
+        // }
+        // });
+        // }
+
+        // create array of CSFs
+        ArrayList<GV3CompressedFunction<String>> csfArray = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            try {
+                GV3CompressedFunction.Builder<String> csf = new GV3CompressedFunction.Builder<>();
+                csf.keys(keysIterable);
+                // csf.values(centroidIndicesIterable.get(i));
+                csfArray.add(csf.build());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
-        Float codebooks[][][] = readCodebooks();
-
-        GV3CompressedFunction.Builder<String> csf = new GV3CompressedFunction.Builder<>();
+        // Float codebooks[][][] = readCodebooks();
 
         Hashtable<String, Integer[]> wordsToEmbeddings = createEmbeddingHashtable(keys, quantized);
+
+        // System.out.println(csfArray.get(0).getLong(keys[0]));
+        // System.out.println(wordsToEmbeddings.get(keys[0]));
 
     }
 }
