@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Random;
 
 import it.unimi.dsi.bits.TransformationStrategies;
 import it.unimi.dsi.fastutil.longs.LongIterable;
@@ -53,7 +54,7 @@ public class App {
             return first;
         }
 
-        public Long[][] getCsfCentroidIndies() {
+        public Long[][] getCsfCentroidIndices() {
             return second;
         }
     }
@@ -133,21 +134,14 @@ public class App {
         return wordsToEmbeddings;
     }
 
-    public static void main(String args[]) {
-        System.out.println("HELLO WORLD");
-
-        String keys[] = readKeys();
+    static ArrayList<GV3CompressedFunction<String>> buildCsfArray(String[] keys, final Long[][] csfCentroidIndices) {
         Iterable<String> keysIterable = Arrays.asList(keys);
-
-        QuantizedResult result = readQuantized();
-        Integer quantized[][] = result.getQuantizedVectors();
-        final Long csfCentroidIndies[][] = result.getCsfCentroidIndies();
 
         // values for CSFs
         ArrayList<LongIterable> centroidIndicesIterable = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             final int ii = i;
-            final Iterator<Long> iterator = Arrays.asList(csfCentroidIndies[ii]).iterator();
+            final Iterator<Long> iterator = Arrays.asList(csfCentroidIndices[ii]).iterator();
             centroidIndicesIterable.add(new LongIterable() {
 
                 @Override
@@ -164,31 +158,109 @@ public class App {
                             return iterator.next();
                         }
 
+                        @Override
+                        public void forEachRemaining(java.util.function.LongConsumer action) {
+                        }
+
+                        @Override
+                        public Long next() {
+                            return iterator.next();
+                        }
                     };
                 }
             });
         }
 
-        // create array of CSFs
         ArrayList<GV3CompressedFunction<String>> csfArray = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             try {
                 GV3CompressedFunction.Builder<String> csf = new GV3CompressedFunction.Builder<>();
                 csf.keys(keysIterable);
                 csf.values(centroidIndicesIterable.get(i));
-                csf.transform(TransformationStrategies.rawUtf16());
+                csf.transform(TransformationStrategies.rawUtf16()); // 8.76 bit cost per elem
+                // all builtin transformation strategies have same bit cost per elem
                 csfArray.add(csf.build());
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        ;
+        return csfArray;
+    }
 
-        // Float codebooks[][][] = readCodebooks();
+    private static void testMemory(ArrayList<GV3CompressedFunction<String>> csfArray,
+            Hashtable<String, Integer[]> wordsToEmbeddings, Float[][][] codebooks) {
 
+        System.out.println("\nTesting memory: \n");
+        System.out.println("num keys: " + csfArray.get(0).size64());
+        System.out.println("num bits for 1 csf: " + csfArray.get(0).numBits());
+        try {
+            csfArray.get(0).dump("singleCsf.txt");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void testLatency(ArrayList<GV3CompressedFunction<String>> csfArray,
+            Hashtable<String, Integer[]> wordsToEmbeddings, String[] keys) {
+
+        System.out.println("\nTesting latency: \n");
+
+        int numQueries = 100000;
+        long csfTimes[] = new long[numQueries];
+        long hashTableTimes[] = new long[numQueries];
+
+        Random random = new Random();
+        for (int i = 0; i < numQueries; i++) {
+            String query = keys[random.nextInt(keys.length)];
+
+            long startTime = System.nanoTime();
+            // for (int j = 0; j < 5; j++) {
+            // csfArray.get(j).getLong(query);
+            // }
+            csfArray.get(0).getLong(query);
+            long endTime = System.nanoTime();
+            long duration = (endTime - startTime);
+            csfTimes[i] = duration;
+
+            long startTime1 = System.nanoTime();
+            wordsToEmbeddings.get(query);
+            long endTime1 = System.nanoTime();
+            long duration1 = (endTime1 - startTime1);
+            hashTableTimes[i] = duration1;
+        }
+
+        Arrays.sort(csfTimes);
+        Arrays.sort(hashTableTimes);
+
+        System.out.println("P99 latency for csf and hashTables");
+        System.out.println("Csf: " + Long.toString(csfTimes[99000]));
+        System.out.println("Hashtable: " + Long.toString(hashTableTimes[99000]));
+
+        System.out.println("P99.9 latency for csf and hashTables");
+        System.out.println("Csf: " + Long.toString(csfTimes[99900]));
+        System.out.println("Hashtable: " + Long.toString(hashTableTimes[99900]));
+    }
+
+    public static void main(String args[]) {
+        System.out.println("HELLO WORLD");
+
+        String keys[] = readKeys();
+        QuantizedResult result = readQuantized();
+        Integer quantized[][] = result.getQuantizedVectors();
+        Float codebooks[][][] = readCodebooks();
+
+        // build csfArray from keys to values
+        ArrayList<GV3CompressedFunction<String>> csfArray = buildCsfArray(keys, result.getCsfCentroidIndices());
+
+        // build standard java hash table for keys to values
         Hashtable<String, Integer[]> wordsToEmbeddings = createEmbeddingHashtable(keys, quantized);
 
-        System.out.println(csfArray.get(0).getLong(keys[0]));
-        System.out.println(wordsToEmbeddings.get(keys[0])[0]);
+        testMemory(csfArray, wordsToEmbeddings, codebooks);
+        testLatency(csfArray, wordsToEmbeddings, keys);
+
+        // System.out.println(csfArray.get(0).getLong(keys[0]));
+        // System.out.println(wordsToEmbeddings.get(keys[0]));
 
     }
 }
