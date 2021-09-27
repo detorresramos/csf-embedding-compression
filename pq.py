@@ -16,10 +16,11 @@ def get_embeddings_from_file(filename):
 
     keys = []
     embeddings = []
-    for i in range(1, 100001):  # use len(lines) for the whole table, testing on first 1000000
+    for i in range(1, len(lines)):  # use len(lines) for the whole table, testing on first 1000000
         line = lines[i].split(" ")
         keys.append(line[0])
         embeddings.append(line[1:-1])
+    print("READ EMBEDDINGS FROM FILE")
     return keys, embeddings
 
 
@@ -96,11 +97,11 @@ def main():
                         help="Desired M for subvector sizes")
     args = parser.parse_args()
 
-    # keys, embeddings = get_embeddings_from_file(args.input_file)
-    # quantized, codebooks = product_quantization(
-    #     embeddings, k=args.k, M=args.M, verbose=True)
-    # save_outputs_in_directory(
-    #     keys, quantized, codebooks, args.output_directory)
+    keys, embeddings = get_embeddings_from_file(args.input_file)
+    quantized, codebooks = product_quantization(
+        embeddings, k=int(args.k), M=int(args.M), verbose=True)
+    save_outputs_in_directory(
+        keys, quantized, codebooks, args.output_directory)
 
 
 main()
