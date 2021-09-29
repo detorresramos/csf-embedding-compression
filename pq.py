@@ -6,6 +6,29 @@ from sklearn.cluster import KMeans
 import argparse
 import math
 import numpy as np
+import faiss
+
+
+class FaissKMeans:
+    def __init__(self, n_clusters=8, n_init=10, max_iter=300):
+        self.n_clusters = n_clusters
+        self.n_init = n_init
+        self.max_iter = max_iter
+        self.kmeans = None
+        self.cluster_centers_ = None
+        self.inertia_ = None
+
+    def fit(self, X):
+        self.kmeans = faiss.Kmeans(d=X.shape[1],
+                                   k=self.n_clusters,
+                                   niter=self.max_iter,
+                                   nredo=self.n_init)
+        self.kmeans.train(X.astype(np.float32))
+        self.cluster_centers_ = self.kmeans.centroids
+        self.inertia_ = self.kmeans.obj[-1]
+
+    def predict(self, X):
+        return self.kmeans.index.search(X.astype(np.float32), 1)[1]
 
 
 def get_embeddings_from_file(filename):
@@ -59,9 +82,8 @@ def product_quantization(embeddings, M, k, verbose=False, silhouette_scoring=Fal
     for section in split_embeddings:
         print(f"Starting k means for section {section_index}")
         X = np.array(section)
-        if verbose:
-            print("performing k means with ... on section " + str(section_index))
-        kmeans = KMeans(n_clusters=k, random_state=0).fit(X)
+        kmeans = FaissKMeans(n_clusters=k)
+        kmeans.fit(X)
         labels = kmeans.predict(X)
         centroids = kmeans.cluster_centers_
         if silhouette_scoring:
@@ -70,7 +92,7 @@ def product_quantization(embeddings, M, k, verbose=False, silhouette_scoring=Fal
             return kmeans.inertia_
         for i in range(len(labels)):
             centroid_id = labels[i]
-            embeddings_as_centroid_ids[i].append(centroid_id)
+            embeddings_as_centroid_ids[i].append(centroid_id[0])
         for i in range(len(centroids)):
             codebooks[section_index].append(centroids[i])
         section_index += 1
