@@ -211,6 +211,8 @@ public class App {
             myWriter.write("Total keys = " + keys.size());
 
             myWriter.write("\n\nTesting memory: \n");
+
+            // TODO correct counting for memory of keys??? see ben email
             int bytesForKeys = 0;
             for (int i = 0; i < keys.size(); i++) {
                 bytesForKeys += keys.get(i).length();
@@ -262,6 +264,11 @@ public class App {
 
             Arrays.sort(csfTimes);
             Arrays.sort(hashTableTimes);
+
+            // TODO mean latency instead of median
+            myWriter.write("\nMedian latency for csf and hashTables");
+            myWriter.write("\nCsf: " + Long.toString(csfTimes[50000]));
+            myWriter.write("\nHashtable: " + Long.toString(hashTableTimes[50000]));
 
             myWriter.write("\nP99 latency for csf and hashTables");
             myWriter.write("\nCsf: " + Long.toString(csfTimes[99000]));
