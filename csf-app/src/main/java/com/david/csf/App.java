@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
@@ -208,16 +210,18 @@ public class App {
         try {
             FileWriter myWriter = new FileWriter(outputFilename);
 
-            myWriter.write("Total keys = " + keys.size());
+            int N = keys.size();
+
+            myWriter.write("Total keys = " + N);
 
             myWriter.write("\n\nTesting memory: \n");
 
-            // TODO correct counting for memory of keys??? see ben email
             int bytesForKeys = 0;
-            for (int i = 0; i < keys.size(); i++) {
+            for (int i = 0; i < N; i++) {
                 bytesForKeys += keys.get(i).length();
             }
-            int bytesForCentroidEmbeddings = keys.size() * numChunks;
+            bytesForKeys += N * 2; // add 2 bytes per key. one for pointer to key and one for null terminator
+            int bytesForCentroidEmbeddings = N * numChunks; // 1 byte integers
             int bytesForHashtable = bytesForKeys + bytesForCentroidEmbeddings;
 
             // total size of csf array in bits
@@ -226,11 +230,13 @@ public class App {
                 bytesForCsfArray += (int) Math.round(csfArray.get(i).numBits() / 8.0);
             }
 
-            double bitsPerElem = (bytesForCsfArray * 8.0) / (numChunks * keys.size());
+            double bitsPerElem = (bytesForCsfArray * 8.0) / (numChunks * N);
 
             // total compression
             float totalCompression = (float) bytesForHashtable / (float) bytesForCsfArray;
 
+            myWriter.write("\nBytes embedding keys = ~" + Integer.toString(bytesForKeys));
+            myWriter.write("\nBytes for centroid embeddings = ~" + Integer.toString(bytesForCentroidEmbeddings));
             myWriter.write("\nBytes for Java Hashtable = ~" + Integer.toString(bytesForHashtable));
             myWriter.write("\nBytes for CSF Array = ~" + Integer.toString(bytesForCsfArray));
             myWriter.write("\nBits per elem = ~" + Double.toString(bitsPerElem));
@@ -240,6 +246,7 @@ public class App {
 
             int numQueries = 100000;
             long csfTimes[] = new long[numQueries];
+            long csfSingleTimes[] = new long[numQueries];
             long hashTableTimes[] = new long[numQueries];
 
             Random random = new Random();
@@ -250,10 +257,15 @@ public class App {
                 for (int j = 0; j < numChunks; j++) {
                     csfArray.get(j).getLong(query);
                 }
-                // csfArray.get(0).getLong(query);
                 long endTime = System.nanoTime();
                 long duration = (endTime - startTime);
                 csfTimes[i] = duration;
+
+                long startTime0 = System.nanoTime();
+                csfArray.get(0).getLong(query);
+                long endTime0 = System.nanoTime();
+                long duration0 = (endTime0 - startTime0);
+                csfSingleTimes[i] = duration0;
 
                 long startTime1 = System.nanoTime();
                 wordsToEmbeddings.get(query);
@@ -263,20 +275,18 @@ public class App {
             }
 
             Arrays.sort(csfTimes);
+            Arrays.sort(csfSingleTimes);
             Arrays.sort(hashTableTimes);
 
-            // TODO mean latency instead of median
-            myWriter.write("\nMedian latency for csf and hashTables");
-            myWriter.write("\nCsf: " + Long.toString(csfTimes[50000]));
-            myWriter.write("\nHashtable: " + Long.toString(hashTableTimes[50000]));
-
-            myWriter.write("\nP99 latency for csf and hashTables");
-            myWriter.write("\nCsf: " + Long.toString(csfTimes[99000]));
-            myWriter.write("\nHashtable: " + Long.toString(hashTableTimes[99000]));
-
-            myWriter.write("\nP99.9 latency for csf and hashTables");
-            myWriter.write("\nCsf: " + Long.toString(csfTimes[99900]));
-            myWriter.write("\nHashtable: " + Long.toString(hashTableTimes[99900]));
+            myWriter.write("\nMedian, P99, P99.9 Latency for:");
+            myWriter.write(String.format("\nGetting the entire centroid vector from CSF       : %s, %s, %s",
+                    Long.toString(csfTimes[50000]), Long.toString(csfTimes[99000]), Long.toString(csfTimes[99900])));
+            myWriter.write(String.format("\nGetting one centroid id from CSF                  : %s, %s, %s",
+                    Long.toString(csfSingleTimes[50000]), Long.toString(csfSingleTimes[99000]),
+                    Long.toString(csfSingleTimes[99900])));
+            myWriter.write(String.format("\nGetting entire centroid vector from Java Hashtable: %s, %s, %s",
+                    Long.toString(hashTableTimes[50000]), Long.toString(hashTableTimes[99000]),
+                    Long.toString(hashTableTimes[99900])));
 
             myWriter.close();
         } catch (IOException e) {
@@ -290,6 +300,14 @@ public class App {
         String outputFilename = args[1];
         int k = Integer.parseInt(args[2]);
         int M = Integer.parseInt(args[3]);
+
+        PrintStream dummyStream = new PrintStream(new OutputStream() {
+            public void write(int b) {
+                // NO-OP
+            }
+        });
+
+        System.setOut(dummyStream);
 
         String keysFilename = inputDirectory + "/keys.txt";
         String quantizedVectorsFilename = inputDirectory + "/quantized.txt";
