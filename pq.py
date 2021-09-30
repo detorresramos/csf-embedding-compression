@@ -80,7 +80,7 @@ def product_quantization(embeddings, M, k, verbose=False, silhouette_scoring=Fal
     codebooks = [[] for _ in range(num_subsections)]
     section_index = 0
     for section in split_embeddings:
-        print(f"Starting k means for section {section_index}")
+        print(f"Starting k means for section {section_index} on M={M}")
         X = np.array(section)
         kmeans = FaissKMeans(n_clusters=k)
         kmeans.fit(X)
