@@ -32,6 +32,26 @@ class FaissKMeans:
 
 
 def get_embeddings_from_file(filename):
+    if filename == "data/sift/sift-128-euclidean.hdf5":
+        import h5py
+
+        with h5py.File(filename, "r") as f:
+            # List all groups
+            distances = list(f.keys())[0]
+            neighbors = list(f.keys())[1]
+            test = list(f.keys())[2]
+            train = list(f.keys())[3]
+
+            # Get the data
+            train = list(f[train])
+            distances = list(f[distances])
+            neighbors = list(f[neighbors])
+            test = list(f[test])
+
+            keys = list(range(len(train)))
+            embeddings = [list(x) for x in train]
+            return keys, embeddings
+
     # English CoNLL17 corpus, Word2Vec Continuous Skipgram, 4027169 word embeddings
     # from http://vectors.nlpl.eu/repository/
     f = open(filename, encoding="ISO-8859-1")
