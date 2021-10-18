@@ -137,9 +137,9 @@ public class App {
         return wordsToEmbeddings;
     }
 
-    static ArrayList<GV3CompressedFunction<String>> buildCsfArray(ArrayList<String> keys,
+    static ArrayList<GV3CompressedFunction<byte[]>> buildCsfArray(ArrayList<byte[]> keys,
             final Long[][] csfCentroidIndices, int numCsfs) {
-        Iterable<String> keysIterable = keys;
+        Iterable<byte[]> keysIterable = keys;
 
         // values for CSFs
         ArrayList<LongIterable> centroidIndicesIterable = new ArrayList<>();
@@ -175,14 +175,13 @@ public class App {
             });
         }
 
-        ArrayList<GV3CompressedFunction<String>> csfArray = new ArrayList<>();
+        ArrayList<GV3CompressedFunction<byte[]>> csfArray = new ArrayList<>();
         for (int i = 0; i < numCsfs; i++) {
             try {
-                GV3CompressedFunction.Builder<String> csf = new GV3CompressedFunction.Builder<>();
+                GV3CompressedFunction.Builder<byte[]> csf = new GV3CompressedFunction.Builder<>();
                 csf.keys(keysIterable);
                 csf.values(centroidIndicesIterable.get(i));
-                csf.transform(TransformationStrategies.rawUtf16()); // 8.76 bit cost per elem
-                // all builtin transformation strategies have same bit cost per elem
+                csf.transform(TransformationStrategies.rawByteArray());
                 csfArray.add(csf.build());
             } catch (IOException e) {
                 e.printStackTrace();
@@ -192,7 +191,7 @@ public class App {
         return csfArray;
     }
 
-    private static void outputResults(ArrayList<GV3CompressedFunction<String>> csfArray,
+    private static void outputResults(ArrayList<GV3CompressedFunction<byte[]>> csfArray,
             Hashtable<String, ArrayList<Integer>> wordsToEmbeddings, ArrayList<String> keys, int numChunks,
             String outputFilename) {
 
@@ -298,8 +297,8 @@ public class App {
     public static void main(String args[]) {
         String inputDirectory = args[0];
         String outputFilename = args[1];
-        int k = Integer.parseInt(args[2]);
-        int M = Integer.parseInt(args[3]);
+        // int k = Integer.parseInt(args[2]);
+        // int M = Integer.parseInt(args[3]);
 
         PrintStream dummyStream = new PrintStream(new OutputStream() {
             public void write(int b) {
@@ -311,16 +310,20 @@ public class App {
 
         String keysFilename = inputDirectory + "/keys.txt";
         String quantizedVectorsFilename = inputDirectory + "/quantized.txt";
-        String codebooksFilename = inputDirectory + "/codebooks.txt";
+        // String codebooksFilename = inputDirectory + "/codebooks.txt";
 
         ArrayList<String> keys = readKeys(keysFilename);
         QuantizedResult result = readQuantized(quantizedVectorsFilename, keys.size());
         ArrayList<ArrayList<Integer>> quantized = result.getQuantizedVectors();
         int numChunks = result.getCsfCentroidIndices().length;
-        Float codebooks[][][] = readCodebooks(codebooksFilename, k, M, numChunks);
+        // Float codebooks[][][] = readCodebooks(codebooksFilename, k, M, numChunks);
 
         // build csfArray from keys to values
-        ArrayList<GV3CompressedFunction<String>> csfArray = buildCsfArray(keys, result.getCsfCentroidIndices(),
+        ArrayList<byte[]> byteKeys = new ArrayList<>();
+        for (String key : keys) {
+            byteKeys.add(key.getBytes());
+        }
+        ArrayList<GV3CompressedFunction<byte[]>> csfArray = buildCsfArray(byteKeys, result.getCsfCentroidIndices(),
                 numChunks);
 
         // build standard java hash table for keys to values
