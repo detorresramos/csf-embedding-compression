@@ -33,42 +33,36 @@ class FaissKMeans:
 
 
 def get_embeddings_from_file(filename):
-    if filename == "data/sift/sift-128-euclidean.hdf5":
+    if filename[-5:] == ".hdf5":
         import h5py
 
         with h5py.File(filename, "r") as f:
             # List all groups
-            distances = list(f.keys())[0]
-            neighbors = list(f.keys())[1]
-            test = list(f.keys())[2]
+            # distances = list(f.keys())[0]
+            # neighbors = list(f.keys())[1]
+            # test = list(f.keys())[2]
             train = list(f.keys())[3]
-
             # Get the data
             train = list(f[train])
-            distances = list(f[distances])
-            neighbors = list(f[neighbors])
-            test = list(f[test])
-
             keys = list(range(len(train)))
             embeddings = [list(x) for x in train]
             return keys, embeddings
+    elif filename == "data/word2vec/model.txt":
+        f = open(filename, encoding="ISO-8859-1")
+        lines = f.readlines()
 
-    # English CoNLL17 corpus, Word2Vec Continuous Skipgram, 4027169 word embeddings
-    # from http://vectors.nlpl.eu/repository/
-    f = open(filename, encoding="ISO-8859-1")
-    lines = f.readlines()
-
-    keys = []
-    embeddings = []
-    for i in range(1, len(lines)):  # use len(lines) for the whole table, testing on first 1000000
-        line = lines[i].split(" ")
-        keys.append(line[0])
-        embeddings.append(line[1:-1])
-    print("READ EMBEDDINGS FROM FILE")
-    return keys, embeddings
+        keys = []
+        embeddings = []
+        for i in range(1, len(lines)):  # use len(lines) for the whole table, testing on first 1000000
+            line = lines[i].split(" ")
+            keys.append(line[0])
+            embeddings.append(line[1:-1])
+        print("READ EMBEDDINGS FROM FILE")
+        return keys, embeddings
+    print("File not explicitly processed")
 
 
-def product_quantization(embeddings, M, k):
+def product_quantization(embeddings, M, k, verbose=False):
     """
     embeddings: embedding vectors
     M: size of vector subsections

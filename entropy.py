@@ -29,7 +29,7 @@ def entropy_calculation():
         entropy = 0
         for code, count in counts.items():
             p = count / len(quantized_codes)
-            entropy -= p * np.log(p)
+            entropy -= p * np.log2(p)
         entropy_vals.append(entropy)
     print(f"Average entropy for M = {args.M}: {sum(entropy_vals) / len(entropy_vals)}")
 
