@@ -3,6 +3,7 @@
 
 from sklearn.metrics import silhouette_score
 from sklearn.cluster import KMeans
+from collections import defaultdict
 import argparse
 import math
 import numpy as np
@@ -67,7 +68,7 @@ def get_embeddings_from_file(filename):
     return keys, embeddings
 
 
-def product_quantization(embeddings, M, k, verbose=False, silhouette_scoring=False, inertia_scoring=False):
+def product_quantization(embeddings, M, k):
     """
     embeddings: embedding vectors
     M: size of vector subsections
@@ -90,13 +91,6 @@ def product_quantization(embeddings, M, k, verbose=False, silhouette_scoring=Fal
     print(f"Performing k means search with k = {k}")
     embeddings_as_centroid_ids = [[] for _ in range(len(embeddings))]
 
-    # given a subsection index and a centroid id within that subsection, return the centroid
-    # codebooks = [
-    #   [centroid0, centroid1, ..., centroidk], # subsection_0
-    #   [centroid0, centroid1, ..., centroidk], # subsection_1
-    #   ...
-    #   [centroid0, centroid1, ..., centroidk], # subsection_num_subsections
-    # ]
     codebooks = [[] for _ in range(num_subsections)]
     section_index = 0
     for section in split_embeddings:
@@ -106,10 +100,6 @@ def product_quantization(embeddings, M, k, verbose=False, silhouette_scoring=Fal
         kmeans.fit(X)
         labels = kmeans.predict(X)
         centroids = kmeans.cluster_centers_
-        if silhouette_scoring:
-            return silhouette_score(X, kmeans.labels_, metric='euclidean')
-        if inertia_scoring:
-            return kmeans.inertia_
         for i in range(len(labels)):
             centroid_id = labels[i]
             embeddings_as_centroid_ids[i].append(centroid_id[0])

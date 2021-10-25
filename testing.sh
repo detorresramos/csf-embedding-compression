@@ -6,11 +6,11 @@ dataset_name="word2vec"
 source_data="model.txt"
 M_sizes=(2 5 10 20 50)
 
-# for M in ${M_sizes[@]};
-# do
-#     # python3 pq.py data/$dataset_name/$source_data data/$dataset_name/testing/testing_M$M 256 $M &
-#     python3 pq.py data/$dataset_name/$source_data data/$dataset_name/testing/testing_M$M 256 $M &
-# done
+for M in ${M_sizes[@]};
+do
+    python3 pq.py data/$dataset_name/$source_data data/$dataset_name/testing/testing_M$M 256 $M &
+    python3 entropy.py data/$dataset_name/testing/testing_M$M/quantized.txt $M &
+done
 
 # TODO: can parallelize better
 # wait
