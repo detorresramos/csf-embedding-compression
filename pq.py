@@ -59,7 +59,39 @@ def get_embeddings_from_file(filename):
             embeddings.append(line[1:-1])
         print("READ EMBEDDINGS FROM FILE")
         return keys, embeddings
-    print("File not explicitly processed")
+    elif filename == "data/ABCHeadlines/abcnews-date-text.csv":
+        # create embeddings from headlines by averaging the embeddings of the words
+        # finds word embeddings from word2vec
+
+        f = open("data/word2vec/model.txt", encoding="ISO-8859-1")
+        lines = f.readlines()
+
+        word2vec = defaultdict(list) #dictionary of words to embedding
+        for i in range(1, len(lines)):  # use len(lines) for the whole table, testing on first 1000000
+            line = lines[i].split(" ")
+            word2vec[line[0]] = line[1:-1]
+            embedding_dim = len(line) - 1
+
+        headline_file = open(filename)
+        headlines_lines = headline_file.readlines()
+
+        keys = []
+        embeddings = []
+        for i in range(1, len(headlines_lines)):
+            line = headlines_lines[i].split(",")
+            keys.append(i)
+            headline_embedding = []
+            sums = [0] * embedding_dim
+            for word in line[1].split(" "):
+                word_embedding = word2vec[word] 
+                for i, val in enumerate(word_embedding):
+                    sums[i] += float(val)
+            for val in sums:
+                headline_embedding.append(val / len(sums))
+            embeddings.append(headline_embedding)
+        return keys, embeddings
+
+    print(f"File not explicitly processed {filename}")
 
 
 def product_quantization(embeddings, M, k, verbose=False):
