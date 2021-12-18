@@ -312,13 +312,13 @@ public class App {
         // int k = Integer.parseInt(args[2]);
         int M = Integer.parseInt(args[3]);
 
-        // PrintStream dummyStream = new PrintStream(new OutputStream() {
-        //     public void write(int b) {
-        //         // NO-OP
-        //     }
-        // });
+        PrintStream dummyStream = new PrintStream(new OutputStream() {
+            public void write(int b) {
+                // NO-OP
+            }
+        });
 
-        // System.setOut(dummyStream);
+        System.setOut(dummyStream);
 
         String keysFilename = inputDirectory + "/keys.txt";
         String quantizedVectorsFilename = inputDirectory + "/quantized.txt";
