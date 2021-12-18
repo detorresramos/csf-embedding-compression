@@ -341,7 +341,7 @@ public class App {
         // build standard java hash table for keys to values
         Hashtable<String, ArrayList<Integer>> wordsToEmbeddings = createEmbeddingHashtable(keys, quantized);
 
-        outputResults(csfArray, wordsToEmbeddings, keys, numChunks, outputFilename);
+        // outputResults(csfArray, wordsToEmbeddings, keys, numChunks, outputFilename);
 
         dumpCsfs(csfArray, numChunks);
 
