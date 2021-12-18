@@ -297,22 +297,11 @@ public class App {
     private static void dumpCsfs(ArrayList<GV3CompressedFunction<byte[]>> csfArray, int numChunks) {
 
         for (int i = 0; i < numChunks; i++) {
-            for (int j = 0; j < numChunks; j++) {
-                // try {
-                //     File file = new File("data/ABCHeadlines_freq/testing/testing_M" + Integer.toString(numChunks) + "/dump/csf" + Integer.toString(i));
-                //     if (file.createNewFile()) {
-                //         System.out.println("Created output file");
-                //     } else {
-                //         System.out.println("File already exists.");
-                //     }
-                // } catch (IOException e) {
-                //     e.printStackTrace();
-                // }
-                try {
-                    csfArray.get(j).dump("data/ABCHeadlines_freq/testing/testing_M" + Integer.toString(numChunks) + "/dump/csf" + Integer.toString(i));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            try {
+                System.out.println("DUMPING " + Integer.toString(i));
+                csfArray.get(i).dump("data/ABCHeadlines_freq/testing/testing_M" + Integer.toString(numChunks) + "/dump/csf" + Integer.toString(i));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
