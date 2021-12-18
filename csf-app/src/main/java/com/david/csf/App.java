@@ -294,19 +294,42 @@ public class App {
         }
     }
 
+    private static void dumpCsfs(ArrayList<GV3CompressedFunction<byte[]>> csfArray, int numChunks) {
+
+        for (int i = 0; i < numChunks; i++) {
+            for (int j = 0; j < numChunks; j++) {
+                // try {
+                //     File file = new File("data/ABCHeadlines_freq/testing/testing_M" + Integer.toString(numChunks) + "/dump/csf" + Integer.toString(i));
+                //     if (file.createNewFile()) {
+                //         System.out.println("Created output file");
+                //     } else {
+                //         System.out.println("File already exists.");
+                //     }
+                // } catch (IOException e) {
+                //     e.printStackTrace();
+                // }
+                try {
+                    csfArray.get(j).dump("data/ABCHeadlines_freq/testing/testing_M" + Integer.toString(numChunks) + "/dump/csf" + Integer.toString(i));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
     public static void main(String args[]) {
         String inputDirectory = args[0];
         String outputFilename = args[1];
         // int k = Integer.parseInt(args[2]);
         // int M = Integer.parseInt(args[3]);
 
-        PrintStream dummyStream = new PrintStream(new OutputStream() {
-            public void write(int b) {
-                // NO-OP
-            }
-        });
+        // PrintStream dummyStream = new PrintStream(new OutputStream() {
+        //     public void write(int b) {
+        //         // NO-OP
+        //     }
+        // });
 
-        System.setOut(dummyStream);
+        // System.setOut(dummyStream);
 
         String keysFilename = inputDirectory + "/keys.txt";
         String quantizedVectorsFilename = inputDirectory + "/quantized.txt";
@@ -330,6 +353,8 @@ public class App {
         Hashtable<String, ArrayList<Integer>> wordsToEmbeddings = createEmbeddingHashtable(keys, quantized);
 
         outputResults(csfArray, wordsToEmbeddings, keys, numChunks, outputFilename);
+
+        dumpCsfs(csfArray, numChunks);
 
     }
 }

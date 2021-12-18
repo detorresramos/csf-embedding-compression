@@ -59,7 +59,7 @@ def get_embeddings_from_file(filename):
             embeddings.append(line[1:-1])
         print("READ EMBEDDINGS FROM FILE")
         return keys, embeddings
-    elif filename == "data/ABCHeadlines/abcnews-date-text.csv":
+    elif filename == "data/ABCHeadlines/abcnews-date-text.csv" or filename == "data/ABCHeadlines_freq/abcnews-date-text.csv":
         # create embeddings from headlines by averaging the embeddings of the words
         # finds word embeddings from word2vec
 
@@ -75,6 +75,17 @@ def get_embeddings_from_file(filename):
         headline_file = open(filename)
         headlines_lines = headline_file.readlines()
 
+        freq_weighting = False
+        if "freq" in filename:
+            freq_weighting = True
+            num_words = 0
+            word_frequencies = defaultdict(int)
+            for i in range(1, len(headlines_lines)):
+                line = headlines_lines[i].split(",")
+                for word in line[1].split(" "):
+                    word_frequencies[word] += 1
+                    num_words += 1
+        
         keys = []
         embeddings = []
         for i in range(1, len(headlines_lines)):
@@ -85,7 +96,10 @@ def get_embeddings_from_file(filename):
             for word in line[1].split(" "):
                 word_embedding = word2vec[word] 
                 for i, val in enumerate(word_embedding):
-                    sums[i] += float(val)
+                    if freq_weighting:
+                        sums[i] += float(val) * word_frequencies[word] / num_words
+                    else:
+                        sums[i] += float(val)
             for val in sums:
                 headline_embedding.append(val / len(sums))
             embeddings.append(headline_embedding)
