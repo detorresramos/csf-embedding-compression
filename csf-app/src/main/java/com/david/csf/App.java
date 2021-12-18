@@ -343,6 +343,8 @@ public class App {
 
         // outputResults(csfArray, wordsToEmbeddings, keys, numChunks, outputFilename);
 
+        System.setOut(System.out);
+
         dumpCsfs(csfArray, M);
 
     }
