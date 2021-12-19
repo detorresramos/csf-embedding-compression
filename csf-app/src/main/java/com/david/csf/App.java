@@ -325,6 +325,7 @@ public class App {
         QuantizedResult result = readQuantized(quantizedVectorsFilename, keys.size());
         ArrayList<ArrayList<Integer>> quantized = result.getQuantizedVectors();
         int numChunks = result.getCsfCentroidIndices().length;
+        if (datasetName.startsWith("ABC")) numChunks = numChunks - 1;
         System.out.println(numChunks);
         System.out.println(M);
         // Float codebooks[][][] = readCodebooks(codebooksFilename, k, M, numChunks);
