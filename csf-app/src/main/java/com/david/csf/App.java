@@ -295,12 +295,12 @@ public class App {
     }
 
 
-    private static void dumpCsfs(ArrayList<GV3CompressedFunction<byte[]>> csfArray, int M) {
+    private static void dumpCsfs(ArrayList<GV3CompressedFunction<byte[]>> csfArray, int M, int numChunks, String datasetName) {
 
-        for (int i = 0; i < M; i++) {
+        for (int i = 0; i < numChunks; i++) {
             try {
                 System.out.println("DUMPING " + Integer.toString(i));
-                csfArray.get(i).dump("data/ABCHeadlines_freq/testing/testing_M" + Integer.toString(M) + "/dump/csf" + Integer.toString(i));
+                csfArray.get(i).dump("data/"+ datasetName + "/testing/testing_M" + Integer.toString(M) + "/dump/csf" + Integer.toString(i));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -353,7 +353,7 @@ public class App {
 
         System.setOut(System.out);
 
-        dumpCsfs(csfArray, M);
+        dumpCsfs(csfArray, M, numChunks, datasetName);
 
     }
 }
