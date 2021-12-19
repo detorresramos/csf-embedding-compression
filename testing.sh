@@ -39,9 +39,6 @@ M_sizes=(2 5 10 20 50)
 # create CSF
 for M in ${M_sizes[@]};
 do
-    java -jar embedding.jar data/$dataset_name/testing/testing_M$M data/$dataset_name/testing/testing_M$M/results_k256_M$M.txt 256 $M &
+    java -jar embedding.jar $dataset_name 256 $M &
 done
 wait
-
-
-# java -jar embedding.jar data/ABCHeadlines_freq/testing/testing_M2 data/ABCHeadlines_freq/testing/testing_M2/results_k256_M2.txt 256 2 &

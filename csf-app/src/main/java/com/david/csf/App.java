@@ -186,10 +186,10 @@ public class App {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-        ;
+        };
         return csfArray;
     }
+
 
     private static void outputResults(ArrayList<GV3CompressedFunction<byte[]>> csfArray,
             Hashtable<String, ArrayList<Integer>> wordsToEmbeddings, ArrayList<String> keys, int numChunks,
@@ -294,6 +294,7 @@ public class App {
         }
     }
 
+
     private static void dumpCsfs(ArrayList<GV3CompressedFunction<byte[]>> csfArray, int M) {
 
         for (int i = 0; i < M; i++) {
@@ -306,19 +307,15 @@ public class App {
         }
     }
 
+
     public static void main(String args[]) {
-        String inputDirectory = args[0];
-        String outputFilename = args[1];
-        // int k = Integer.parseInt(args[2]);
-        int M = Integer.parseInt(args[3]);
+        String datasetName = args[0];
+        int M = Integer.parseInt(args[2]);
+        String inputDirectory = "data/" + datasetName + "/testing/testing_M" + Integer.toString(M);
+        String outputFilename = "data/" + datasetName + "/testing/testing_M" + Integer.toString(M) + "/results_k256_M" + Integer.toString(M) + ".txt";
 
-        PrintStream dummyStream = new PrintStream(new OutputStream() {
-            public void write(int b) {
-                // NO-OP
-            }
-        });
-
-        System.setOut(dummyStream);
+        System.out.println(inputDirectory);
+        System.out.println(outputFilename);
 
         String keysFilename = inputDirectory + "/keys.txt";
         String quantizedVectorsFilename = inputDirectory + "/quantized.txt";
@@ -328,6 +325,8 @@ public class App {
         QuantizedResult result = readQuantized(quantizedVectorsFilename, keys.size());
         ArrayList<ArrayList<Integer>> quantized = result.getQuantizedVectors();
         int numChunks = result.getCsfCentroidIndices().length;
+        System.out.println(numChunks);
+        System.out.println(M);
         // Float codebooks[][][] = readCodebooks(codebooksFilename, k, M, numChunks);
 
         // build csfArray from keys to values
@@ -335,13 +334,22 @@ public class App {
         for (String key : keys) {
             byteKeys.add(key.getBytes());
         }
+
+        PrintStream dummyStream = new PrintStream(new OutputStream() {
+            public void write(int b) {
+                // NO-OP
+            }
+        });
+
+        System.setOut(dummyStream);
+
         ArrayList<GV3CompressedFunction<byte[]>> csfArray = buildCsfArray(byteKeys, result.getCsfCentroidIndices(),
                 numChunks);
 
         // build standard java hash table for keys to values
         Hashtable<String, ArrayList<Integer>> wordsToEmbeddings = createEmbeddingHashtable(keys, quantized);
 
-        // outputResults(csfArray, wordsToEmbeddings, keys, numChunks, outputFilename);
+        outputResults(csfArray, wordsToEmbeddings, keys, numChunks, outputFilename);
 
         System.setOut(System.out);
 
