@@ -241,51 +241,55 @@ public class App {
             myWriter.write("\nBits per elem = ~" + Double.toString(bitsPerElem));
             myWriter.write("\nTotal Compression = ~" + Float.toString(totalCompression));
 
-            myWriter.write("\n\nTesting latency: \n");
 
-            int numQueries = 100000;
-            long csfTimes[] = new long[numQueries];
-            long csfSingleTimes[] = new long[numQueries];
-            long hashTableTimes[] = new long[numQueries];
+            // TIMING MODULE
 
-            Random random = new Random();
-            for (int i = 0; i < numQueries; i++) {
-                String query = keys.get(random.nextInt(keys.size()));
 
-                long startTime = System.nanoTime();
-                for (int j = 0; j < numChunks; j++) {
-                    csfArray.get(j).getLong(query);
-                }
-                long endTime = System.nanoTime();
-                long duration = (endTime - startTime);
-                csfTimes[i] = duration;
+            // myWriter.write("\n\nTesting latency: \n");
 
-                long startTime0 = System.nanoTime();
-                csfArray.get(0).getLong(query);
-                long endTime0 = System.nanoTime();
-                long duration0 = (endTime0 - startTime0);
-                csfSingleTimes[i] = duration0;
+            // int numQueries = 100000;
+            // long csfTimes[] = new long[numQueries];
+            // long csfSingleTimes[] = new long[numQueries];
+            // long hashTableTimes[] = new long[numQueries];
 
-                long startTime1 = System.nanoTime();
-                wordsToEmbeddings.get(query);
-                long endTime1 = System.nanoTime();
-                long duration1 = (endTime1 - startTime1);
-                hashTableTimes[i] = duration1;
-            }
+            // Random random = new Random();
+            // for (int i = 0; i < numQueries; i++) {
+            //     String query = keys.get(random.nextInt(keys.size()));
 
-            Arrays.sort(csfTimes);
-            Arrays.sort(csfSingleTimes);
-            Arrays.sort(hashTableTimes);
+            //     long startTime = System.nanoTime();
+            //     for (int j = 0; j < numChunks; j++) {
+            //         csfArray.get(j).getLong(query);
+            //     }
+            //     long endTime = System.nanoTime();
+            //     long duration = (endTime - startTime);
+            //     csfTimes[i] = duration;
 
-            myWriter.write("\nMedian, P99, P99.9 Latency for:");
-            myWriter.write(String.format("\nGetting the entire centroid vector from CSF       : %s, %s, %s",
-                    Long.toString(csfTimes[50000]), Long.toString(csfTimes[99000]), Long.toString(csfTimes[99900])));
-            myWriter.write(String.format("\nGetting one centroid id from CSF                  : %s, %s, %s",
-                    Long.toString(csfSingleTimes[50000]), Long.toString(csfSingleTimes[99000]),
-                    Long.toString(csfSingleTimes[99900])));
-            myWriter.write(String.format("\nGetting entire centroid vector from Java Hashtable: %s, %s, %s",
-                    Long.toString(hashTableTimes[50000]), Long.toString(hashTableTimes[99000]),
-                    Long.toString(hashTableTimes[99900])));
+            //     long startTime0 = System.nanoTime();
+            //     csfArray.get(0).getLong(query);
+            //     long endTime0 = System.nanoTime();
+            //     long duration0 = (endTime0 - startTime0);
+            //     csfSingleTimes[i] = duration0;
+
+            //     long startTime1 = System.nanoTime();
+            //     wordsToEmbeddings.get(query);
+            //     long endTime1 = System.nanoTime();
+            //     long duration1 = (endTime1 - startTime1);
+            //     hashTableTimes[i] = duration1;
+            // }
+
+            // Arrays.sort(csfTimes);
+            // Arrays.sort(csfSingleTimes);
+            // Arrays.sort(hashTableTimes);
+
+            // myWriter.write("\nMedian, P99, P99.9 Latency for:");
+            // myWriter.write(String.format("\nGetting the entire centroid vector from CSF       : %s, %s, %s",
+            //         Long.toString(csfTimes[50000]), Long.toString(csfTimes[99000]), Long.toString(csfTimes[99900])));
+            // myWriter.write(String.format("\nGetting one centroid id from CSF                  : %s, %s, %s",
+            //         Long.toString(csfSingleTimes[50000]), Long.toString(csfSingleTimes[99000]),
+            //         Long.toString(csfSingleTimes[99900])));
+            // myWriter.write(String.format("\nGetting entire centroid vector from Java Hashtable: %s, %s, %s",
+            //         Long.toString(hashTableTimes[50000]), Long.toString(hashTableTimes[99000]),
+            //         Long.toString(hashTableTimes[99900])));
 
             myWriter.close();
         } catch (IOException e) {
@@ -314,9 +318,6 @@ public class App {
         String inputDirectory = "data/" + datasetName + "/testing/testing_M" + Integer.toString(M);
         String outputFilename = "data/" + datasetName + "/testing/testing_M" + Integer.toString(M) + "/results_k256_M" + Integer.toString(M) + ".txt";
 
-        System.out.println(inputDirectory);
-        System.out.println(outputFilename);
-
         String keysFilename = inputDirectory + "/keys.txt";
         String quantizedVectorsFilename = inputDirectory + "/quantized.txt";
         // String codebooksFilename = inputDirectory + "/codebooks.txt";
@@ -326,8 +327,6 @@ public class App {
         ArrayList<ArrayList<Integer>> quantized = result.getQuantizedVectors();
         int numChunks = result.getCsfCentroidIndices().length;
         if (datasetName.startsWith("ABC")) numChunks = numChunks - 1;
-        System.out.println(numChunks);
-        System.out.println(M);
         // Float codebooks[][][] = readCodebooks(codebooksFilename, k, M, numChunks);
 
         // build csfArray from keys to values
