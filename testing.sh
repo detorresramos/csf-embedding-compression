@@ -1,6 +1,6 @@
-# dataset_name="sift"
-# source_data="sift-128-euclidean.hdf5"
-# M_sizes=(2 4 8 16 32 64)
+dataset_name="sift"
+source_data="sift-128-euclidean.hdf5"
+M_sizes=(2 4 8 16 32 64)
 
 # dataset_name="word2vec"
 # source_data="model.txt"
@@ -18,9 +18,9 @@
 # source_data="abcnews-date-text.csv"
 # M_sizes=(2 5 10 20 50)
 
-dataset_name="ABCHeadlines_freq"
-source_data="abcnews-date-text.csv"
-M_sizes=(2 5 10 20 50)
+# dataset_name="ABCHeadlines_freq"
+# source_data="abcnews-date-text.csv"
+# M_sizes=(2 5 10 20 50)
 
 # # run product quantization
 # for M in ${M_sizes[@]};
@@ -42,3 +42,10 @@ do
     java -jar embedding.jar $dataset_name 256 $M &
 done
 wait
+
+# hash table timing
+# for M in ${M_sizes[@]};
+# do
+#     ./c/hashing/hashtable ../../data/$dataset_name/testing/testing_M$M &
+# done
+# wait
