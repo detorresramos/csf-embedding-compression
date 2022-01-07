@@ -4,6 +4,9 @@
 #include <unordered_map>
 #include <vector>
 #include <sstream>
+#include <chrono>
+#include <ctime>   
+#include <algorithm>
 using namespace std;
 
 int main(int argc, char *argv[]) {
@@ -16,6 +19,8 @@ int main(int argc, char *argv[]) {
     ifstream keysFile(baseDirectory + "/keys.txt");
     ifstream valuesFile(baseDirectory + "/quantized.txt");
 
+    vector<int> queryKeys;
+    int i = 0;
 
     // find length of quantized arrays, new vectors
     unordered_map<int, vector<int>> map;
@@ -29,17 +34,33 @@ int main(int argc, char *argv[]) {
             quantized.push_back(stoi(tok)); 
         }
         map[stoi(strkey)] = quantized;
+
+        if (i % 3 == 0 && queryKeys.size() < 10000) {
+            queryKeys.push_back(stoi(strkey));
+        }
+        i++;
     }
     keysFile.close();
     valuesFile.close();
 
-    for (int i: map[map.size()])
-        cout << i;
-    
-    
 
+    // for (int i: map[map.size()])
+    //     cout << i;
+    
 
     // do timing tests
+    vector<chrono::duration<double>> timings;
+    for (int i : queryKeys) {
+        auto start = std::chrono::system_clock::now();
+        map[i];
+        auto end = std::chrono::system_clock::now();
+        timings.push_back(end-start);
+    }
+
+    sort(timings.begin(), timings.end());
+
+    cout << timings[9990].count() << "s\n";
+
 
 
 

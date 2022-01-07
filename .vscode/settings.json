@@ -1,4 +1,8 @@
 {
     "java.configuration.updateBuildConfiguration": "automatic",
-    "maven.view": "flat"
+    "maven.view": "flat",
+    "files.associations": {
+        "chrono": "cpp",
+        "iostream": "cpp"
+    }
 }
