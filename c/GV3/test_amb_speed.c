@@ -7,12 +7,15 @@
 #include <string.h>
 #include <assert.h>
 #include <time.h>
+#include <omp.h>
+#include "spooky.h"
 
 #include "csf3.h"
 
-void BubbleSort(int a[], int array_size)
+void BubbleSort(double a[], int array_size)
 {
-    int i, j, temp;
+    int i, j;
+    double temp;
     for (i = 0; i < (array_size - 1); ++i)
     {
         for (j = 0; j < array_size - 1 - i; ++j )
@@ -76,36 +79,41 @@ int main(int argc, char** argv) {
 
     // create array of all keys
     FILE *actualFp = fopen(keysFilePath, "r");
-    numKeys = 20; 
-    char keys[256][numKeys]; //TODO not enough space for all keys
+    char (*keys)[256] = malloc(sizeof(*keys) * numKeys);
     i = 0;
     while (fgets(keys[i], sizeof(keys[i]), actualFp)) {
         if (i >= numKeys) break;
         i++;
     }
     fclose(actualFp);
+    // printf("%s\n", keys[49]);
 
-    // get random subsample of keys
-    // int numQueries = 10000;
-    // char *queryKeys[numQueries];
-    // TODO generate subsample
 
     // performance testing
-    int timings[numKeys];
-    for (int i = 0; i < numKeys; i++) {
-        char *queryKey = keys[i];
+    int numQueries = 1000;
+    double *timings = malloc(sizeof(double) * numQueries);
+    for (int i = 0; i < numQueries; i++) {
+        char *queryKey = keys[i * 10];
         queryKey[strcspn(queryKey, "\n")] = '\0';
         clock_t start = clock(), diff;
+        // #pragma omp parallel
+        // #pragma omp for
+        uint64_t signature[4];
+        spooky_short(queryKey, strlen(queryKey), csfArray[0]->global_seed, signature);
         for (int csfNum = 0; csfNum < numCsfs; csfNum++) {
+            printf("%lu\n", csfArray[csfNum]->global_seed);
             csf3_get_byte_array(csfArray[csfNum], queryKey, strlen(queryKey));
+            // csf3_get_byte_array_with_hash(csfArray[csfNum], signature);
+            // printf("%s, %ld\n", queryKey, val);
         }
+        printf("LMFAO\n");
         diff = clock() - start;
-        int msec = diff * 1000 / CLOCKS_PER_SEC;
+        double msec = (diff * 1000.0) / CLOCKS_PER_SEC;
         timings[i] = msec;
     }
-
-    BubbleSort(timings, numKeys);
-    printf("%d\n", timings[numKeys - 1]);
+    // printf("LMFAO\n");
+    BubbleSort(timings, numQueries);
+    printf("%f\n", timings[numQueries - 10]);
 
     // int64_t val = csf3_get_byte_array(csf, "10", 2); 
     // printf("%ld\n", val);
@@ -118,5 +126,6 @@ int main(int argc, char** argv) {
     for (int csfNum = 0; csfNum < numCsfs; csfNum++) {
         destroy_csf(csfArray[csfNum]);
     }
-
+    free(keys);
+    free(timings);
 }

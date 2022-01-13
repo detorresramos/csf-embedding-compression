@@ -70,6 +70,21 @@ int64_t csf3_get_byte_array(const csf_t *csf, char *key, uint64_t len) {
 	return get_value(csf->array, e[0] + start, e[0] + end) ^ get_value(csf->array, e[1] + start, e[1] + end) ^ get_value(csf->array, e[2] + start, e[2] + end);
 }
 
+int64_t csf3_get_byte_array_with_hash(const csf_t *csf, uint64_t signature[4]) {
+	const int bucket = ((__uint128_t)(signature[0] >> 1) * (__uint128_t)csf->multiplier) >> 64;
+	const uint64_t offset_seed = csf->offset_and_seed[bucket];
+	const uint64_t bucket_offset = offset_seed & OFFSET_MASK;
+	const int w = csf->global_max_codeword_length;
+	const int num_variables = (csf->offset_and_seed[bucket + 1] & OFFSET_MASK) - bucket_offset - w;
+	int e[3];
+	signature_to_equation(signature, offset_seed & ~OFFSET_MASK, num_variables, e);
+	const int64_t t = decode(csf, get_value(csf->array, e[0] + bucket_offset, w) ^ get_value(csf->array, e[1] + bucket_offset, w) ^ get_value(csf->array, e[2] + bucket_offset, w));
+	if (t != -1) return t;
+	const uint64_t end = csf->global_max_codeword_length - csf->escape_length;
+	const uint64_t start = end - csf->escaped_symbol_length;
+	return get_value(csf->array, e[0] + start, e[0] + end) ^ get_value(csf->array, e[1] + start, e[1] + end) ^ get_value(csf->array, e[2] + start, e[2] + end);
+}
+
 int64_t csf3_get_uint64_t(const csf_t *csf, const uint64_t key) {
 	uint64_t signature[4];
 	spooky_short(&key, 8, csf->global_seed, signature);

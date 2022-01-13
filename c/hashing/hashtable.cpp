@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
         }
         map[stoi(strkey)] = quantized;
 
-        if (i % 3 == 0 && queryKeys.size() < 10000) {
+        if (i % 3 == 0 && queryKeys.size() < 1000) {
             queryKeys.push_back(stoi(strkey));
         }
         i++;
@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 
     sort(timings.begin(), timings.end());
 
-    cout << timings[9990].count() << "s\n";
+    cout << timings[1000 - 10].count() << "s\n";
 
 
 
