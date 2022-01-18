@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 
     sort(timings.begin(), timings.end());
 
-    cout << timings[1000 - 10].count() << "s\n";
+    cout << timings[500].count() << "s\n";
 
 
 

@@ -32,6 +32,23 @@ class FaissKMeans:
         return self.kmeans.index.search(X.astype(np.float32), 1)[1]
 
 
+def handle_big(filename):
+    print("YANDEX")
+    N = 1000000000
+    d = 200
+    with open(filename, 'rb') as f:  # Must be opened as binary file
+        X = np.fromfile(file=f, dtype=np.float32, count=N*d, offset=8)
+        print("Finished reading data")
+        # dataset is in C-contiguous order (not Fortran), so
+        # we can re-view X instead of np.reshape (which may copy).
+        embeddings = X.view()
+        embeddings.shape = (N, d)  # Throws AttributeError if len(X) != N*d
+        # I checked using that the float values are correct
+        # (and in the correct order) using a hex-viewer.
+        keys = np.arange(N)
+        return keys, embeddings
+
+
 def get_embeddings_from_file(filename):
     if filename[-5:] == ".hdf5":
         import h5py
@@ -168,8 +185,10 @@ def main():
     parser.add_argument("M", action="store", metavar="<M>",
                         help="Desired M for subvector sizes")
     args = parser.parse_args()
-
-    keys, embeddings = get_embeddings_from_file(args.input_file)
+    if "yandex" in args.input_file:
+        keys, embeddings = handle_big(args.input_file)
+    else:
+        keys, embeddings = get_embeddings_from_file(args.input_file)
     quantized, codebooks = product_quantization(
         embeddings, k=int(args.k), M=int(args.M), verbose=True)
     save_outputs_in_directory(

@@ -98,22 +98,23 @@ int main(int argc, char** argv) {
         clock_t start = clock(), diff;
         // #pragma omp parallel
         // #pragma omp for
-        uint64_t signature[4];
-        spooky_short(queryKey, strlen(queryKey), csfArray[0]->global_seed, signature);
+        // uint64_t signature[4];
+        // spooky_short(queryKey, strlen(queryKey), csfArray[0]->global_seed, signature);
+        // # pragma omp parallel for
         for (int csfNum = 0; csfNum < numCsfs; csfNum++) {
-            printf("%lu\n", csfArray[csfNum]->global_seed);
+            // printf("%lu\n", csfArray[csfNum]->global_seed);
             csf3_get_byte_array(csfArray[csfNum], queryKey, strlen(queryKey));
             // csf3_get_byte_array_with_hash(csfArray[csfNum], signature);
             // printf("%s, %ld\n", queryKey, val);
         }
-        printf("LMFAO\n");
+        // printf("LMFAO\n");
         diff = clock() - start;
         double msec = (diff * 1000.0) / CLOCKS_PER_SEC;
         timings[i] = msec;
     }
     // printf("LMFAO\n");
     BubbleSort(timings, numQueries);
-    printf("%f\n", timings[numQueries - 10]);
+    printf("%f\n", timings[500]);
 
     // int64_t val = csf3_get_byte_array(csf, "10", 2); 
     // printf("%ld\n", val);
