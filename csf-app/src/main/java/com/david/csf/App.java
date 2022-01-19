@@ -16,7 +16,7 @@ import java.util.Random;
 import it.unimi.dsi.bits.TransformationStrategies;
 import it.unimi.dsi.fastutil.longs.LongIterable;
 import it.unimi.dsi.fastutil.longs.LongIterator;
-import it.unimi.dsi.sux4j.mph.GV3CompressedFunction;
+import it.unimi.dsi.util.XoRoShiRo128PlusRandom;
 
 public class App {
     static ArrayList<String> readKeys(String filename) {
@@ -137,7 +137,7 @@ public class App {
         return wordsToEmbeddings;
     }
 
-    static ArrayList<GV3CompressedFunction<byte[]>> buildCsfArray(ArrayList<byte[]> keys,
+    static ArrayList<DavesGV3CompressedFunction<byte[]>> buildCsfArray(ArrayList<byte[]> keys,
             final Long[][] csfCentroidIndices, int numCsfs) {
         Iterable<byte[]> keysIterable = keys;
 
@@ -175,13 +175,15 @@ public class App {
             });
         }
 
-        ArrayList<GV3CompressedFunction<byte[]>> csfArray = new ArrayList<>();
+        final XoRoShiRo128PlusRandom r = new XoRoShiRo128PlusRandom();
+        ArrayList<DavesGV3CompressedFunction<byte[]>> csfArray = new ArrayList<>();
         for (int i = 0; i < numCsfs; i++) {
             try {
-                GV3CompressedFunction.Builder<byte[]> csf = new GV3CompressedFunction.Builder<>();
+                DavesGV3CompressedFunction.Builder<byte[]> csf = new DavesGV3CompressedFunction.Builder<>();
                 csf.keys(keysIterable);
                 csf.values(centroidIndicesIterable.get(i));
                 csf.transform(TransformationStrategies.rawByteArray());
+                csf.davesSeed(r);
                 csfArray.add(csf.build());
             } catch (IOException e) {
                 e.printStackTrace();
@@ -191,7 +193,7 @@ public class App {
     }
 
 
-    private static void outputResults(ArrayList<GV3CompressedFunction<byte[]>> csfArray,
+    private static void outputResults(ArrayList<DavesGV3CompressedFunction<byte[]>> csfArray,
             Hashtable<String, ArrayList<Integer>> wordsToEmbeddings, ArrayList<String> keys, int numChunks,
             String outputFilename) {
 
@@ -299,7 +301,7 @@ public class App {
     }
 
 
-    private static void dumpCsfs(ArrayList<GV3CompressedFunction<byte[]>> csfArray, int M, int numChunks, String datasetName) {
+    private static void dumpCsfs(ArrayList<DavesGV3CompressedFunction<byte[]>> csfArray, int M, int numChunks, String datasetName) {
 
         for (int i = 0; i < numChunks; i++) {
             try {
@@ -342,7 +344,7 @@ public class App {
 
         System.setOut(dummyStream);
 
-        ArrayList<GV3CompressedFunction<byte[]>> csfArray = buildCsfArray(byteKeys, result.getCsfCentroidIndices(),
+        ArrayList<DavesGV3CompressedFunction<byte[]>> csfArray = buildCsfArray(byteKeys, result.getCsfCentroidIndices(),
                 numChunks);
 
         // build standard java hash table for keys to values

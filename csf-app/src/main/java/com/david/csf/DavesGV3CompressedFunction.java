@@ -216,6 +216,8 @@ public class DavesGV3CompressedFunction<T> extends AbstractObject2LongFunction<T
 		protected boolean built;
 		protected Codec codec;
 		protected boolean peeled;
+        protected XoRoShiRo128PlusRandom r;
+
 
 		/**
 		 * Specifies the keys of the function; if you have specified a {@link #store(BucketedHashStore)
@@ -326,6 +328,11 @@ public class DavesGV3CompressedFunction<T> extends AbstractObject2LongFunction<T
 			return this;
 		}
 
+        public Builder<T> davesSeed(final XoRoShiRo128PlusRandom r) {
+            this.r = r;
+            return this;
+        }
+
 		/**
 		 * Builds a new function.
 		 *
@@ -338,7 +345,7 @@ public class DavesGV3CompressedFunction<T> extends AbstractObject2LongFunction<T
 			built = true;
 			if (transform == null) if (bucketedHashStore != null) transform = bucketedHashStore.transform();
 			else throw new IllegalArgumentException("You must specify a TransformationStrategy, either explicitly or via a given BucketedHashStore");
-			return new DavesGV3CompressedFunction<>(keys, transform, values, indirect, tempDir, bucketedHashStore, codec, peeled);
+			return new DavesGV3CompressedFunction<>(keys, transform, values, indirect, tempDir, bucketedHashStore, codec, peeled, r);
 		}
 	}
 
@@ -399,13 +406,14 @@ public class DavesGV3CompressedFunction<T> extends AbstractObject2LongFunction<T
 	 *            structure uses +12% space, but it can be constructed much more quickly.
 	 */
 	@SuppressWarnings("resource")
-	protected DavesGV3CompressedFunction(final Iterable<? extends T> keys, final TransformationStrategy<? super T> transform, final LongIterable values, final boolean indirect, final File tempDir, BucketedHashStore<T> bucketedHashStore, final Codec codec, final boolean peeled) throws IOException {
+	protected DavesGV3CompressedFunction(final Iterable<? extends T> keys, final TransformationStrategy<? super T> transform, final LongIterable values, final boolean indirect, final File tempDir, BucketedHashStore<T> bucketedHashStore, final Codec codec, final boolean peeled, final XoRoShiRo128PlusRandom r
+    ) throws IOException {
 		Objects.requireNonNull(codec, "Null codec");
 		this.transform = transform;
 		final ProgressLogger pl = new ProgressLogger(LOGGER);
 		pl.displayLocalSpeed = true;
 		pl.displayFreeMemory = true;
-		final XoRoShiRo128PlusRandom r = new XoRoShiRo128PlusRandom();
+		// final XoRoShiRo128PlusRandom r = new XoRoShiRo128PlusRandom();
 		pl.itemsName = "keys";
 		final boolean givenBucketedHashStore = bucketedHashStore != null;
 		if (!givenBucketedHashStore) {
@@ -768,7 +776,8 @@ public class DavesGV3CompressedFunction<T> extends AbstractObject2LongFunction<T
 			if ("-".equals(stringFile)) throw new IllegalArgumentException("Cannot read from standard input when building byte-array functions");
 			if (iso || utf32 || jsapResult.userSpecified("encoding")) throw new IllegalArgumentException("Encoding options are not available when building byte-array functions");
 			final Iterable<byte[]> keys = new FileLinesByteArrayIterable(stringFile, decompressor);
-			BinIO.storeObject(new DavesGV3CompressedFunction<>(keys, TransformationStrategies.rawByteArray(), values, false, tempDir, null, codec, peeled), functionName);
+			BinIO.storeObject(new DavesGV3CompressedFunction<>(keys, TransformationStrategies.rawByteArray(), values, false, tempDir, null, codec, peeled, new XoRoShiRo128PlusRandom()
+            ), functionName);
 		} else {
 			final Iterable<? extends CharSequence> keys;
 			if ("-".equals(stringFile)) {
@@ -778,7 +787,7 @@ public class DavesGV3CompressedFunction<T> extends AbstractObject2LongFunction<T
 			} else keys = new FileLinesMutableStringIterable(stringFile, encoding, decompressor);
 			final TransformationStrategy<CharSequence> transformationStrategy = iso ? TransformationStrategies.rawIso() : utf32 ? TransformationStrategies.rawUtf32() : TransformationStrategies.rawUtf16();
 
-			BinIO.storeObject(new DavesGV3CompressedFunction<>(keys, transformationStrategy, values, false, tempDir, null, codec, peeled), functionName);
+			BinIO.storeObject(new DavesGV3CompressedFunction<>(keys, transformationStrategy, values, false, tempDir, null, codec, peeled, new XoRoShiRo128PlusRandom()), functionName);
 		}
 		LOGGER.info("Completed.");
 	}
