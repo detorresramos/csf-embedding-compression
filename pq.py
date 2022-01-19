@@ -34,7 +34,7 @@ class FaissKMeans:
 
 def handle_big(filename):
     print("YANDEX")
-    N = 1000000000
+    N = 100000000
     d = 200
     with open(filename, 'rb') as f:  # Must be opened as binary file
         X = np.fromfile(file=f, dtype=np.float32, count=N*d, offset=8)
@@ -139,30 +139,33 @@ def product_quantization(embeddings, M, k, verbose=False):
     num_subsections = math.ceil(len(embeddings[0]) / M)
     print(
         f"Splitting {len(embeddings)} embeddings of size {len(embeddings[0])} into {num_subsections} subsections of size {M}")
-    split_embeddings = [[] for _ in range(num_subsections)]
-    for embedding in embeddings:
-        subsections = [embedding[i:i + M] for i in range(0, len(embedding), M)]
-        for i in range(len(subsections)):
-            split_embeddings[i].append(subsections[i])
+    # split_embeddings = [[] for _ in range(num_subsections)]
+    # for embedding in embeddings:
+    #     subsections = [embedding[i:i + M] for i in range(0, len(embedding), M)]
+    #     for i in range(len(subsections)):
+    #         split_embeddings[i].append(subsections[i])
 
     print(f"Performing k means search with k = {k}")
     embeddings_as_centroid_ids = [[] for _ in range(len(embeddings))]
 
     codebooks = [[] for _ in range(num_subsections)]
-    section_index = 0
-    for section in split_embeddings:
+    # section_index = 0
+    # for section in split_embeddings:
+
+    for section_index in range(num_subsections):
+        section = embeddings[:,section_index:section_index+M]
+
         print(f"Starting k means for section {section_index} on M={M}")
-        X = np.array(section)
         kmeans = FaissKMeans(n_clusters=k)
-        kmeans.fit(X)
-        labels = kmeans.predict(X)
+        kmeans.fit(section)
+        labels = kmeans.predict(section)
         centroids = kmeans.cluster_centers_
         for i in range(len(labels)):
             centroid_id = labels[i]
             embeddings_as_centroid_ids[i].append(centroid_id[0])
         for i in range(len(centroids)):
             codebooks[section_index].append(centroids[i])
-        section_index += 1
+        # section_index += 1
 
     return embeddings_as_centroid_ids, codebooks
 
@@ -191,6 +194,7 @@ def main():
         keys, embeddings = get_embeddings_from_file(args.input_file)
     quantized, codebooks = product_quantization(
         embeddings, k=int(args.k), M=int(args.M), verbose=True)
+    # print(quantized)
     save_outputs_in_directory(
         keys, quantized, codebooks, args.output_directory)
 

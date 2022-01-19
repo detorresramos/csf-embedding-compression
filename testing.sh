@@ -2,17 +2,17 @@
 # source_data="sift-128-euclidean.hdf5"
 # M_sizes=(2 4 8 16 32 64)
 
-# dataset_name="word2vec"
-# source_data="model.txt"
-# M_sizes=(2 5 10 20 50)
+dataset_name="word2vec"
+source_data="model.txt"
+M_sizes=(2 5 10 20 50)
 
 # dataset_name="nytimes"
 # source_data="nytimes-256-angular.hdf5"
 # M_sizes=(2 4 8 16 32 64)
 
-dataset_name="lastfm"
-source_data="lastfm-64-dot.hdf5"
-M_sizes=(2 5 10 15 20)
+# dataset_name="lastfm"
+# source_data="lastfm-64-dot.hdf5"
+# M_sizes=(2 5 10 15 20)
 
 # dataset_name="ABCHeadlines"
 # source_data="abcnews-date-text.csv"
