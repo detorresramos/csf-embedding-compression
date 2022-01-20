@@ -13,6 +13,8 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Random;
 
+import javax.swing.plaf.synth.SynthSplitPaneUI;
+
 import it.unimi.dsi.bits.TransformationStrategies;
 import it.unimi.dsi.fastutil.longs.LongIterable;
 import it.unimi.dsi.fastutil.longs.LongIterator;
@@ -52,12 +54,14 @@ public class OneAtATime {
             String input = null;
             input = reader.readLine();
             String[] splited = input.split("\\s+");
+            int i = 0;
             csfCentroidIndices = new Long[N];
             while (input != null) {
-                csfCentroidIndices[startIdx] = Long.parseLong(splited[startIdx]);
+                csfCentroidIndices[i] = Long.parseLong(splited[startIdx]);
                 input = reader.readLine();
                 if (input != null)
                     splited = input.split("\\s+");
+                i++;
             }
             reader.close();
             return csfCentroidIndices;
@@ -88,7 +92,9 @@ public class OneAtATime {
 
                     @Override
                     public long nextLong() {
-                        return iterator.next();
+                        Long val = iterator.next();
+                        System.out.println(val);
+                        return val;
                     }
 
                     @Override
