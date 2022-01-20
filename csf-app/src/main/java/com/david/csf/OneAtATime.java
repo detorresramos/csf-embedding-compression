@@ -92,9 +92,7 @@ public class OneAtATime {
 
                     @Override
                     public long nextLong() {
-                        Long val = iterator.next();
-                        System.out.println(val);
-                        return val;
+                        return iterator.next();
                     }
 
                     @Override
