@@ -16,14 +16,14 @@ int main(int argc, char *argv[]) {
 
     string strkey;
     string strValue;
-    ifstream keysFile(baseDirectory + "/keys.txt");
-    ifstream valuesFile(baseDirectory + "/quantized.txt");
+    ifstream keysFile(baseDirectory + "keys.txt");
+    ifstream valuesFile(baseDirectory + "quantized.txt");
 
-    vector<int> queryKeys;
+    vector<string> queryKeys;
     int i = 0;
 
     // find length of quantized arrays, new vectors
-    unordered_map<int, vector<int>> map;
+    unordered_map<string, vector<int>> map;
     while (getline(keysFile, strkey)) {
         getline(valuesFile, strValue);
 
@@ -33,10 +33,10 @@ int main(int argc, char *argv[]) {
         while(getline(ss, tok, ' ')) { 
             quantized.push_back(stoi(tok)); 
         }
-        map[stoi(strkey)] = quantized;
+        map[strkey] = quantized;
 
-        if (i % 3 == 0 && queryKeys.size() < 1000) {
-            queryKeys.push_back(stoi(strkey));
+        if (i % 3 == 0 && queryKeys.size() < 10000) {
+            queryKeys.push_back(strkey);
         }
         i++;
     }
@@ -50,19 +50,20 @@ int main(int argc, char *argv[]) {
 
     // do timing tests
     vector<chrono::duration<double>> timings;
-    for (int i : queryKeys) {
-        auto start = std::chrono::system_clock::now();
+    for (string i : queryKeys) {
+        auto start = std::chrono::high_resolution_clock::now();
         map[i];
-        auto end = std::chrono::system_clock::now();
-        timings.push_back(end-start);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> ms_double = end - start;
+        timings.push_back(ms_double);
     }
 
     sort(timings.begin(), timings.end());
 
-    cout << timings[500].count() << "s\n";
-
-
-
+    cout << "Median: " << timings[5000].count() << "s\n";
+    cout << "P99: " << timings[9900].count() << "s\n";
+    cout << "P99.9: " << timings[9990].count() << "s\n";
+    cout << "P99.99: " << timings[9999].count() << "s\n";
 
     return 0;
 }

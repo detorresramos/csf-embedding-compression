@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
 
 
     // performance testing
-    int numQueries = 1;
+    int numQueries = 10000;
     double *timings = malloc(sizeof(double) * numQueries);
     for (int i = 0; i < numQueries; i++) {
         char *queryKey = keys[i * 10];
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
         // spooky_short(queryKey, strlen(queryKey), csfArray[0]->global_seed, signature);
         // # pragma omp parallel for
         for (int csfNum = 0; csfNum < numCsfs; csfNum++) {
-            printf("%lu\n", csfArray[csfNum]->global_seed);
+            // printf("%lu\n", csfArray[csfNum]->global_seed);
             csf3_get_byte_array(csfArray[csfNum], queryKey, strlen(queryKey));
             // csf3_get_byte_array_with_hash(csfArray[csfNum], signature);
             // printf("%s, %ld\n", queryKey, val);
@@ -114,7 +114,10 @@ int main(int argc, char** argv) {
     }
     // printf("LMFAO\n");
     BubbleSort(timings, numQueries);
-    printf("%f\n", timings[500]);
+    printf("Median: %f\n", timings[5000]);
+    printf("P99: %f\n", timings[9900]);
+    printf("P99.9: %f\n", timings[9990]);
+    printf("P99.99: %f\n", timings[9999]);
 
     // int64_t val = csf3_get_byte_array(csf, "10", 2); 
     // printf("%ld\n", val);
