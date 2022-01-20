@@ -205,6 +205,14 @@ public class OneAtATime {
             byteKeys.add(key.getBytes());
         }
 
+        PrintStream dummyStream = new PrintStream(new OutputStream() {
+            public void write(int b) {
+                // NO-OP
+            }
+        });
+
+        System.setOut(dummyStream);
+
         ArrayList<GV3CompressedFunction<byte[]>> csfArray = new ArrayList<>();
         for (int i = 0; i < numChunks; i++) {
             Long[] quantizedIndices = readQuantizedAtIthChunk(quantizedVectorsFilename, keys.size(), i);
