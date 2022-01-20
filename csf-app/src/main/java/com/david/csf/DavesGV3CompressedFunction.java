@@ -362,7 +362,7 @@ public class DavesGV3CompressedFunction<T> extends AbstractObject2LongFunction<T
 	/** Length of longest codeword **/
 	protected final int globalMaxCodewordLength;
 	/** The seed used to generate the initial signature. */
-	protected long globalSeed;
+	public long globalSeed;
 	/**
 	 * A long containing three values per bucket:
 	 * <ul>
