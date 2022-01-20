@@ -52,7 +52,7 @@ def handle_big(filename, with_keys=False):
             return embeddings
 
 
-def get_embeddings_from_file(filename):
+def get_embeddings_from_file(filename, N):
     if filename[-5:] == ".hdf5":
         import h5py
 
@@ -73,12 +73,12 @@ def get_embeddings_from_file(filename):
 
         keys = []
         embeddings = []
-        for i in range(1, len(lines)):  # use len(lines) for the whole table, testing on first 1000000
+        for i in range(1, min(N, len(lines))):  # use len(lines) for the whole table, testing on first 1000000
             line = lines[i].split(" ")
             keys.append(line[0])
             embeddings.append(line[1:-1])
-        print("READ EMBEDDINGS FROM FILE")
-        return keys, embeddings
+        print(f"READ {N} EMBEDDINGS FROM FILE")
+        return keys, np.array(embeddings)
     elif filename == "data/ABCHeadlines/abcnews-date-text.csv" or filename == "data/ABCHeadlines_freq/abcnews-date-text.csv":
         # create embeddings from headlines by averaging the embeddings of the words
         # finds word embeddings from word2vec
@@ -181,6 +181,7 @@ def product_quantization(embeddings, M, k, verbose=False):
     # for section in split_embeddings:
 
     for section_index in range(num_subsections):
+        # print(f"{num_subsections}, {section_index}")
         section = embeddings[:,section_index:section_index+M]
 
         print(f"Starting k means for section {section_index} on M={M}")
@@ -215,12 +216,14 @@ def main():
                         help="Desired k for k-means.")
     parser.add_argument("M", action="store", metavar="<M>",
                         help="Desired M for subvector sizes")
+    parser.add_argument("N", action="store", metavar="<N>",
+                        help="Desired number of embeddings to look at")
     args = parser.parse_args()
     if "yandex" in args.input_file:
         keys, quantized = big_pq(args.input_file, k=int(args.k), M=int(args.M))
         save_outputs_in_directory(keys, quantized, None, args.output_directory)
     else:
-        keys, embeddings = get_embeddings_from_file(args.input_file)
+        keys, embeddings = get_embeddings_from_file(args.input_file, int(args.N))
         quantized, codebooks = product_quantization(embeddings, k=int(args.k), M=int(args.M), verbose=True)
         save_outputs_in_directory(
             keys, quantized, codebooks, args.output_directory)
