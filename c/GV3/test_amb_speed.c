@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
 
 
     // performance testing
-    int numQueries = 1000;
+    int numQueries = 1;
     double *timings = malloc(sizeof(double) * numQueries);
     for (int i = 0; i < numQueries; i++) {
         char *queryKey = keys[i * 10];
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
         // spooky_short(queryKey, strlen(queryKey), csfArray[0]->global_seed, signature);
         // # pragma omp parallel for
         for (int csfNum = 0; csfNum < numCsfs; csfNum++) {
-            // printf("%lu\n", csfArray[csfNum]->global_seed);
+            printf("%lu\n", csfArray[csfNum]->global_seed);
             csf3_get_byte_array(csfArray[csfNum], queryKey, strlen(queryKey));
             // csf3_get_byte_array_with_hash(csfArray[csfNum], signature);
             // printf("%s, %ld\n", queryKey, val);

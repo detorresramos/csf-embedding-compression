@@ -32,9 +32,9 @@ class FaissKMeans:
         return self.kmeans.index.search(X.astype(np.float32), 1)[1]
 
 
-def handle_big(filename):
+def handle_big(filename, with_keys=False):
     print("YANDEX")
-    N = 100000000
+    N = 1000000000
     d = 200
     with open(filename, 'rb') as f:  # Must be opened as binary file
         X = np.fromfile(file=f, dtype=np.float32, count=N*d, offset=8)
@@ -45,8 +45,11 @@ def handle_big(filename):
         embeddings.shape = (N, d)  # Throws AttributeError if len(X) != N*d
         # I checked using that the float values are correct
         # (and in the correct order) using a hex-viewer.
-        keys = np.arange(N)
-        return keys, embeddings
+        if with_keys:
+            keys = np.arange(N)
+            return keys, embeddings
+        else:
+            return embeddings
 
 
 def get_embeddings_from_file(filename):
@@ -125,6 +128,31 @@ def get_embeddings_from_file(filename):
     print(f"File not explicitly processed {filename}")
 
 
+def big_pq(filename, k, M):
+    keys, embeddings = handle_big(filename, with_keys=True)
+    num_subsections = math.ceil(len(embeddings[0]) / M)
+    embeddings_as_centroid_ids = [[] for _ in range(len(embeddings))]
+
+    for section_index in range(num_subsections):
+        section = embeddings[:,section_index:section_index+M]
+        section = section.copy()
+        del embeddings
+
+        print(f"Starting k means for section {section_index} on M={M}")
+        kmeans = FaissKMeans(n_clusters=k)
+        kmeans.fit(section)
+        labels = kmeans.predict(section)
+        centroids = kmeans.cluster_centers_
+        for i in range(len(labels)):
+            centroid_id = labels[i]
+            embeddings_as_centroid_ids[i].append(centroid_id[0])
+        if section_index != num_subsections - 1:
+            embeddings = handle_big(filename, with_keys=False)
+    
+    return keys, embeddings_as_centroid_ids
+    
+
+
 def product_quantization(embeddings, M, k, verbose=False):
     """
     embeddings: embedding vectors
@@ -148,7 +176,7 @@ def product_quantization(embeddings, M, k, verbose=False):
     print(f"Performing k means search with k = {k}")
     embeddings_as_centroid_ids = [[] for _ in range(len(embeddings))]
 
-    codebooks = [[] for _ in range(num_subsections)]
+    # codebooks = [[] for _ in range(num_subsections)]
     # section_index = 0
     # for section in split_embeddings:
 
@@ -163,8 +191,8 @@ def product_quantization(embeddings, M, k, verbose=False):
         for i in range(len(labels)):
             centroid_id = labels[i]
             embeddings_as_centroid_ids[i].append(centroid_id[0])
-        for i in range(len(centroids)):
-            codebooks[section_index].append(centroids[i])
+        # for i in range(len(centroids)):
+        #     codebooks[section_index].append(centroids[i])
         # section_index += 1
 
     return embeddings_as_centroid_ids, codebooks
@@ -173,8 +201,8 @@ def product_quantization(embeddings, M, k, verbose=False):
 def save_outputs_in_directory(keys, quantized, codebooks, directory):
     np.savetxt(directory + '/keys.txt', np.array(keys), fmt="%s")
     np.savetxt(directory + '/quantized.txt', quantized, fmt='%i')
-    np.savetxt(directory + '/codebooks.txt',
-               np.array(codebooks).reshape(np.array(codebooks).shape[0], -1), fmt='%1.3f')
+    # np.savetxt(directory + '/codebooks.txt',
+    #            np.array(codebooks).reshape(np.array(codebooks).shape[0], -1), fmt='%1.3f')
 
 
 def main():
@@ -189,14 +217,13 @@ def main():
                         help="Desired M for subvector sizes")
     args = parser.parse_args()
     if "yandex" in args.input_file:
-        keys, embeddings = handle_big(args.input_file)
+        keys, quantized = big_pq(args.input_file, k=int(args.k), M=int(args.M))
+        save_outputs_in_directory(keys, quantized, None, args.output_directory)
     else:
         keys, embeddings = get_embeddings_from_file(args.input_file)
-    quantized, codebooks = product_quantization(
-        embeddings, k=int(args.k), M=int(args.M), verbose=True)
-    # print(quantized)
-    save_outputs_in_directory(
-        keys, quantized, codebooks, args.output_directory)
+        quantized, codebooks = product_quantization(embeddings, k=int(args.k), M=int(args.M), verbose=True)
+        save_outputs_in_directory(
+            keys, quantized, codebooks, args.output_directory)
 
 
 main()
