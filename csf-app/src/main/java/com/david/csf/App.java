@@ -176,6 +176,7 @@ public class App {
         }
 
         final XoRoShiRo128PlusRandom r = new XoRoShiRo128PlusRandom();
+        long rando = r.nextLong();
         ArrayList<DavesGV3CompressedFunction<byte[]>> csfArray = new ArrayList<>();
         for (int i = 0; i < numCsfs; i++) {
             try {
@@ -183,7 +184,7 @@ public class App {
                 csf.keys(keysIterable);
                 csf.values(centroidIndicesIterable.get(i));
                 csf.transform(TransformationStrategies.rawByteArray());
-                csf.davesSeed(r);
+                csf.davesSeed(rando);
                 csfArray.add(csf.build());
             } catch (IOException e) {
                 e.printStackTrace();
@@ -336,13 +337,13 @@ public class App {
             byteKeys.add(key.getBytes());
         }
 
-        PrintStream dummyStream = new PrintStream(new OutputStream() {
-            public void write(int b) {
-                // NO-OP
-            }
-        });
+        // PrintStream dummyStream = new PrintStream(new OutputStream() {
+        //     public void write(int b) {
+        //         // NO-OP
+        //     }
+        // });
 
-        System.setOut(dummyStream);
+        // System.setOut(dummyStream);
 
         ArrayList<DavesGV3CompressedFunction<byte[]>> csfArray = buildCsfArray(byteKeys, result.getCsfCentroidIndices(),
                 numChunks);

@@ -216,7 +216,7 @@ public class DavesGV3CompressedFunction<T> extends AbstractObject2LongFunction<T
 		protected boolean built;
 		protected Codec codec;
 		protected boolean peeled;
-        protected XoRoShiRo128PlusRandom r;
+        protected long rando;
 
 
 		/**
@@ -328,8 +328,8 @@ public class DavesGV3CompressedFunction<T> extends AbstractObject2LongFunction<T
 			return this;
 		}
 
-        public Builder<T> davesSeed(final XoRoShiRo128PlusRandom r) {
-            this.r = r;
+        public Builder<T> davesSeed(long rando) {
+            this.rando = rando;
             return this;
         }
 
@@ -345,7 +345,7 @@ public class DavesGV3CompressedFunction<T> extends AbstractObject2LongFunction<T
 			built = true;
 			if (transform == null) if (bucketedHashStore != null) transform = bucketedHashStore.transform();
 			else throw new IllegalArgumentException("You must specify a TransformationStrategy, either explicitly or via a given BucketedHashStore");
-			return new DavesGV3CompressedFunction<>(keys, transform, values, indirect, tempDir, bucketedHashStore, codec, peeled, r);
+			return new DavesGV3CompressedFunction<>(keys, transform, values, indirect, tempDir, bucketedHashStore, codec, peeled, rando);
 		}
 	}
 
@@ -406,7 +406,7 @@ public class DavesGV3CompressedFunction<T> extends AbstractObject2LongFunction<T
 	 *            structure uses +12% space, but it can be constructed much more quickly.
 	 */
 	@SuppressWarnings("resource")
-	protected DavesGV3CompressedFunction(final Iterable<? extends T> keys, final TransformationStrategy<? super T> transform, final LongIterable values, final boolean indirect, final File tempDir, BucketedHashStore<T> bucketedHashStore, final Codec codec, final boolean peeled, final XoRoShiRo128PlusRandom r
+	protected DavesGV3CompressedFunction(final Iterable<? extends T> keys, final TransformationStrategy<? super T> transform, final LongIterable values, final boolean indirect, final File tempDir, BucketedHashStore<T> bucketedHashStore, final Codec codec, final boolean peeled, long rando
     ) throws IOException {
 		Objects.requireNonNull(codec, "Null codec");
 		this.transform = transform;
@@ -419,7 +419,7 @@ public class DavesGV3CompressedFunction<T> extends AbstractObject2LongFunction<T
 		if (!givenBucketedHashStore) {
 			if (keys == null) throw new IllegalArgumentException("If you do not provide a bucketed hash store, you must provide the keys");
 			bucketedHashStore = new BucketedHashStore<>(transform, tempDir, -1, pl);
-			bucketedHashStore.reset(r.nextLong());
+			bucketedHashStore.reset(rando);
 			if (values == null || indirect) bucketedHashStore.addAll(keys.iterator());
 			else bucketedHashStore.addAll(keys.iterator(), values.iterator());
 		}
@@ -575,7 +575,7 @@ public class DavesGV3CompressedFunction<T> extends AbstractObject2LongFunction<T
 				if (keys == null) throw new IllegalStateException("You provided no keys, but the bucketed hash store was not checked");
 				if (duplicates++ > 3) throw new IllegalArgumentException("The input list contains duplicates");
 				LOGGER.warn("Found duplicate. Recomputing signatures...");
-				bucketedHashStore.reset(r.nextLong());
+				bucketedHashStore.reset(rando);
 				pl.itemsName = "keys";
 				if (values == null || indirect) bucketedHashStore.addAll(keys.iterator());
 				else bucketedHashStore.addAll(keys.iterator(), values.iterator());
@@ -776,7 +776,7 @@ public class DavesGV3CompressedFunction<T> extends AbstractObject2LongFunction<T
 			if ("-".equals(stringFile)) throw new IllegalArgumentException("Cannot read from standard input when building byte-array functions");
 			if (iso || utf32 || jsapResult.userSpecified("encoding")) throw new IllegalArgumentException("Encoding options are not available when building byte-array functions");
 			final Iterable<byte[]> keys = new FileLinesByteArrayIterable(stringFile, decompressor);
-			BinIO.storeObject(new DavesGV3CompressedFunction<>(keys, TransformationStrategies.rawByteArray(), values, false, tempDir, null, codec, peeled, new XoRoShiRo128PlusRandom()
+			BinIO.storeObject(new DavesGV3CompressedFunction<>(keys, TransformationStrategies.rawByteArray(), values, false, tempDir, null, codec, peeled, new XoRoShiRo128PlusRandom().nextLong()
             ), functionName);
 		} else {
 			final Iterable<? extends CharSequence> keys;
@@ -787,7 +787,7 @@ public class DavesGV3CompressedFunction<T> extends AbstractObject2LongFunction<T
 			} else keys = new FileLinesMutableStringIterable(stringFile, encoding, decompressor);
 			final TransformationStrategy<CharSequence> transformationStrategy = iso ? TransformationStrategies.rawIso() : utf32 ? TransformationStrategies.rawUtf32() : TransformationStrategies.rawUtf16();
 
-			BinIO.storeObject(new DavesGV3CompressedFunction<>(keys, transformationStrategy, values, false, tempDir, null, codec, peeled, new XoRoShiRo128PlusRandom()), functionName);
+			BinIO.storeObject(new DavesGV3CompressedFunction<>(keys, transformationStrategy, values, false, tempDir, null, codec, peeled, new XoRoShiRo128PlusRandom().nextLong()), functionName);
 		}
 		LOGGER.info("Completed.");
 	}
