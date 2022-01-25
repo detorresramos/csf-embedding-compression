@@ -128,15 +128,13 @@ def get_embeddings_from_file(filename, N):
     print(f"File not explicitly processed {filename}")
 
 
-def big_pq(filename, k, M):
+def big_pq(filename, k, M, directory):
     keys, embeddings = handle_big(filename, with_keys=True)
     num_subsections = math.ceil(len(embeddings[0]) / M)
     embeddings_as_centroid_ids = [[] for _ in range(len(embeddings))]
 
     for section_index in range(num_subsections):
         section = embeddings[:,section_index:section_index+M]
-        section = section.copy()
-        del embeddings
 
         print(f"Starting k means for section {section_index} on M={M}")
         kmeans = FaissKMeans(n_clusters=k)
@@ -146,8 +144,9 @@ def big_pq(filename, k, M):
         for i in range(len(labels)):
             centroid_id = labels[i]
             embeddings_as_centroid_ids[i].append(centroid_id[0])
-        if section_index != num_subsections - 1:
-            embeddings = handle_big(filename, with_keys=False)
+        if section_index == 9:
+            np.savetxt(directory + '/quantizedfirst.txt', embeddings_as_centroid_ids, fmt='%i')
+            embeddings_as_centroid_ids = [[] for _ in range(len(embeddings))]
     
     return keys, embeddings_as_centroid_ids
     
@@ -196,7 +195,7 @@ def product_quantization(embeddings, M, k, verbose=False):
         #     codebooks[section_index].append(centroids[i])
         # section_index += 1
 
-    return embeddings_as_centroid_ids, codebooks
+    return embeddings_as_centroid_ids
 
 
 def save_outputs_in_directory(keys, quantized, codebooks, directory):
@@ -220,13 +219,13 @@ def main():
                         help="Desired number of embeddings to look at")
     args = parser.parse_args()
     if "yandex" in args.input_file:
-        keys, quantized = big_pq(args.input_file, k=int(args.k), M=int(args.M))
+        keys, quantized = big_pq(args.input_file, int(args.k), int(args.M), args.output_directory)
         save_outputs_in_directory(keys, quantized, None, args.output_directory)
     else:
         keys, embeddings = get_embeddings_from_file(args.input_file, int(args.N))
-        quantized, codebooks = product_quantization(embeddings, k=int(args.k), M=int(args.M), verbose=True)
+        quantized = product_quantization(embeddings, k=int(args.k), M=int(args.M), verbose=True)
         save_outputs_in_directory(
-            keys, quantized, codebooks, args.output_directory)
+            keys, quantized, None, args.output_directory)
 
 
 main()

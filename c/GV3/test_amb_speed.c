@@ -12,10 +12,28 @@
 
 #include "csf3.h"
 
-void BubbleSort(double a[], int array_size)
+enum { NS_PER_SECOND = 1000000000 };
+
+void sub_timespec(struct timespec t1, struct timespec t2, struct timespec *td)
+{
+    td->tv_nsec = t2.tv_nsec - t1.tv_nsec;
+    td->tv_sec  = t2.tv_sec - t1.tv_sec;
+    if (td->tv_sec > 0 && td->tv_nsec < 0)
+    {
+        td->tv_nsec += NS_PER_SECOND;
+        td->tv_sec--;
+    }
+    else if (td->tv_sec < 0 && td->tv_nsec > 0)
+    {
+        td->tv_nsec -= NS_PER_SECOND;
+        td->tv_sec++;
+    }
+}
+
+void BubbleSort(long int a[], int array_size)
 {
     int i, j;
-    double temp;
+    long int temp;
     for (i = 0; i < (array_size - 1); ++i)
     {
         for (j = 0; j < array_size - 1 - i; ++j )
@@ -86,16 +104,18 @@ int main(int argc, char** argv) {
         i++;
     }
     fclose(actualFp);
-    // printf("%s\n", keys[49]);
+    // printf("LMFAO\n");
 
 
     // performance testing
     int numQueries = 10000;
-    double *timings = malloc(sizeof(double) * numQueries);
+    long int *timings = malloc(sizeof(double) * numQueries);
     for (int i = 0; i < numQueries; i++) {
-        char *queryKey = keys[i * 10];
+        char *queryKey = keys[i];
         queryKey[strcspn(queryKey, "\n")] = '\0';
-        clock_t start = clock(), diff;
+        struct timespec start1, finish, delta;
+        clock_gettime(CLOCK_REALTIME, &start1);
+        // clock_t start = clock(), diff;
         // #pragma omp parallel
         // #pragma omp for
         // uint64_t signature[4];
@@ -107,17 +127,20 @@ int main(int argc, char** argv) {
             // csf3_get_byte_array_with_hash(csfArray[csfNum], signature);
             // printf("%s, %ld\n", queryKey, val);
         }
-        // printf("LMFAO\n");
-        diff = clock() - start;
-        double msec = (diff * 1000.0) / CLOCKS_PER_SEC;
-        timings[i] = msec;
+        clock_gettime(CLOCK_REALTIME, &finish);
+        // printf("%d\n", i);
+        // diff = clock() - start;
+        // double msec = (diff * 1000.0) / CLOCKS_PER_SEC;
+        sub_timespec(start1, finish, &delta);
+        // printf("%d.%.9ld\n", (int)delta.tv_sec, delta.tv_nsec);
+        timings[i] = delta.tv_nsec;
     }
     // printf("LMFAO\n");
     BubbleSort(timings, numQueries);
-    printf("Median: %f\n", timings[5000]);
-    printf("P99: %f\n", timings[9900]);
-    printf("P99.9: %f\n", timings[9990]);
-    printf("P99.99: %f\n", timings[9999]);
+    printf("Median: %ld\n", timings[5000]);
+    printf("P99: %ld\n", timings[9900]);
+    printf("P99.9: %ld\n", timings[9990]);
+    printf("P99.99: %ld\n", timings[9999]);
 
     // int64_t val = csf3_get_byte_array(csf, "10", 2); 
     // printf("%ld\n", val);
