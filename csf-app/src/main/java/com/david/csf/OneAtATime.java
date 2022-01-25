@@ -22,8 +22,8 @@ import it.unimi.dsi.sux4j.mph.GV3CompressedFunction;
 import it.unimi.dsi.util.XoRoShiRo128PlusRandom;
 
 public class OneAtATime {
-    static String[] readKeys(String filename) {
-        String[] keys = new String[1000000000];
+    static ArrayList<byte[]> readKeys(String filename) {
+        ArrayList<byte[]> keys = new ArrayList<>();
 
         try {
             File file = new File(filename);
@@ -32,7 +32,7 @@ public class OneAtATime {
             int i = 0;
             String input = null;
             while ((input = reader.readLine()) != null) {
-                keys[i] = input;
+                keys.add(i, input.getBytes());
                 i++;
             }
             reader.close();
@@ -120,7 +120,7 @@ public class OneAtATime {
     }
 
 
-    private static void outputResults(ArrayList<GV3CompressedFunction<byte[]>> csfArray, String[] keys, int numChunks,
+    private static void outputResults(ArrayList<GV3CompressedFunction<byte[]>> csfArray, ArrayList<byte[]> keys, int numChunks,
             String outputFilename) {
 
         try {
@@ -137,7 +137,7 @@ public class OneAtATime {
         try {
             FileWriter myWriter = new FileWriter(outputFilename);
 
-            int N = keys.length;
+            int N = keys.size();
 
             myWriter.write("Total keys = " + N);
 
@@ -145,7 +145,7 @@ public class OneAtATime {
 
             int bytesForKeys = 0;
             for (int i = 0; i < N; i++) {
-                bytesForKeys += keys[i].length();
+                bytesForKeys += keys.get(i).length;
             }
             bytesForKeys += N * 2; // add 2 bytes per key. one for pointer to key and one for null terminator
             int bytesForCentroidEmbeddings = N * numChunks; // 1 byte integers
@@ -198,12 +198,7 @@ public class OneAtATime {
         String outputFilename = "data/" + datasetName + "/testing/testing_M" + Integer.toString(M) + "/results_k256_M" + Integer.toString(M) + ".txt";
         String keysFilename = inputDirectory + "/keys.txt";
         String quantizedVectorsFilename = inputDirectory + "/quantized.txt";
-        String[] keys = readKeys(keysFilename);
-
-        ArrayList<byte[]> byteKeys = new ArrayList<>();
-        for (String key : keys) {
-            byteKeys.add(key.getBytes());
-        }
+        ArrayList<byte[]> byteKeys = readKeys(keysFilename);
 
         PrintStream dummyStream = new PrintStream(new OutputStream() {
             public void write(int b) {
@@ -215,12 +210,12 @@ public class OneAtATime {
 
         ArrayList<GV3CompressedFunction<byte[]>> csfArray = new ArrayList<>();
         for (int i = 0; i < numChunks; i++) {
-            Long[] quantizedIndices = readQuantizedAtIthChunk(quantizedVectorsFilename, keys.length, i);
+            Long[] quantizedIndices = readQuantizedAtIthChunk(quantizedVectorsFilename, byteKeys.size(), i);
             GV3CompressedFunction<byte[]> csf = buildSingleCsf(byteKeys, quantizedIndices, numChunks);
             csfArray.add(csf);
         }
 
-        outputResults(csfArray, keys, numChunks, outputFilename);
+        outputResults(csfArray, byteKeys, numChunks, outputFilename);
 
         dumpCsfs(csfArray, M, numChunks, datasetName);
 
