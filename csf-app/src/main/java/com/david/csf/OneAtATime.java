@@ -22,8 +22,8 @@ import it.unimi.dsi.sux4j.mph.GV3CompressedFunction;
 import it.unimi.dsi.util.XoRoShiRo128PlusRandom;
 
 public class OneAtATime {
-    static ArrayList<byte[]> readKeys(String filename) {
-        ArrayList<byte[]> keys = new ArrayList<>();
+    static ArrayList<Long> readKeys(String filename) {
+        ArrayList<Long> keys = new ArrayList<>();
 
         try {
             File file = new File(filename);
@@ -32,7 +32,7 @@ public class OneAtATime {
             int i = 0;
             String input = null;
             while ((input = reader.readLine()) != null) {
-                keys.add(i, input.getBytes());
+                keys.add(i, Long.parseLong(input));
                 i++;
             }
             reader.close();
@@ -73,9 +73,9 @@ public class OneAtATime {
     }
 
 
-    private static GV3CompressedFunction<byte[]> buildSingleCsf(ArrayList<byte[]> keys,
+    private static GV3CompressedFunction<Long> buildSingleCsf(ArrayList<Long> keys,
             Long[] csfCentroidIndices, int numCsfs) {
-        Iterable<byte[]> keysIterable = keys;
+        Iterable<Long> keysIterable = keys;
 
         // values for CSFs
         final Iterator<Long> iterator = Arrays.asList(csfCentroidIndices).iterator();
@@ -108,10 +108,10 @@ public class OneAtATime {
         };
 
         try {
-            GV3CompressedFunction.Builder<byte[]> csf = new GV3CompressedFunction.Builder<>();
+            GV3CompressedFunction.Builder<Long> csf = new GV3CompressedFunction.Builder<>();
             csf.keys(keysIterable);
             csf.values(centroidIndicesIterable);
-            csf.transform(TransformationStrategies.rawByteArray());
+            csf.transform(TransformationStrategies.fixedLong());
             return csf.build();
         } catch (IOException e) {
             e.printStackTrace();
@@ -120,7 +120,7 @@ public class OneAtATime {
     }
 
 
-    private static void outputResults(ArrayList<GV3CompressedFunction<byte[]>> csfArray, ArrayList<byte[]> keys, int numChunks,
+    private static void outputResults(ArrayList<GV3CompressedFunction<Long>> csfArray, ArrayList<Long> keys, int numChunks,
             String outputFilename) {
 
         try {
@@ -137,22 +137,22 @@ public class OneAtATime {
         try {
             FileWriter myWriter = new FileWriter(outputFilename);
 
-            int N = keys.size();
+            Long N = Long.valueOf(keys.size());
 
             myWriter.write("Total keys = " + N);
 
             myWriter.write("\n\nTesting memory: \n");
 
-            int bytesForKeys = 0;
+            Long bytesForKeys = 0L;
             for (int i = 0; i < N; i++) {
-                bytesForKeys += keys.get(i).length;
+                bytesForKeys += keys.get(i) * 8; // 8 bytes for long
             }
             bytesForKeys += N * 2; // add 2 bytes per key. one for pointer to key and one for null terminator
-            int bytesForCentroidEmbeddings = N * numChunks; // 1 byte integers
-            int bytesForHashtable = bytesForKeys + bytesForCentroidEmbeddings;
+            Long bytesForCentroidEmbeddings = N * numChunks; // 1 byte integers
+            Long bytesForHashtable = bytesForKeys + bytesForCentroidEmbeddings;
 
             // total size of csf array in bits
-            int bytesForCsfArray = 0;
+            Long bytesForCsfArray = 0L;
             for (int i = 0; i < numChunks; i++) {
                 bytesForCsfArray += (int) Math.round(csfArray.get(i).numBits() / 8.0);
             }
@@ -162,10 +162,10 @@ public class OneAtATime {
             // total compression
             float totalCompression = (float) bytesForHashtable / (float) bytesForCsfArray;
 
-            myWriter.write("\nBytes embedding keys = ~" + Integer.toString(bytesForKeys));
-            myWriter.write("\nBytes for centroid embeddings = ~" + Integer.toString(bytesForCentroidEmbeddings));
-            myWriter.write("\nBytes for Java Hashtable = ~" + Integer.toString(bytesForHashtable));
-            myWriter.write("\nBytes for CSF Array = ~" + Integer.toString(bytesForCsfArray));
+            myWriter.write("\nBytes embedding keys = ~" + Long.toString(bytesForKeys));
+            myWriter.write("\nBytes for centroid embeddings = ~" + Long.toString(bytesForCentroidEmbeddings));
+            myWriter.write("\nBytes for Java Hashtable = ~" + Long.toString(bytesForHashtable));
+            myWriter.write("\nBytes for CSF Array = ~" + Long.toString(bytesForCsfArray));
             myWriter.write("\nBits per elem = ~" + Double.toString(bitsPerElem));
             myWriter.write("\nTotal Compression = ~" + Float.toString(totalCompression));
 
@@ -177,7 +177,7 @@ public class OneAtATime {
     }
 
 
-    private static void dumpCsfs(ArrayList<GV3CompressedFunction<byte[]>> csfArray, int M, int numChunks, String datasetName) {
+    private static void dumpCsfs(ArrayList<GV3CompressedFunction<Long>> csfArray, int M, int numChunks, String datasetName) {
 
         for (int i = 0; i < numChunks; i++) {
             try {
@@ -198,7 +198,7 @@ public class OneAtATime {
         String outputFilename = "data/" + datasetName + "/testing/testing_M" + Integer.toString(M) + "/results_k256_M" + Integer.toString(M) + ".txt";
         String keysFilename = inputDirectory + "/keys.txt";
         String quantizedVectorsFilename = inputDirectory + "/quantized.txt";
-        ArrayList<byte[]> byteKeys = readKeys(keysFilename);
+        ArrayList<Long> byteKeys = readKeys(keysFilename);
 
         PrintStream dummyStream = new PrintStream(new OutputStream() {
             public void write(int b) {
@@ -208,10 +208,10 @@ public class OneAtATime {
 
         System.setOut(dummyStream);
 
-        ArrayList<GV3CompressedFunction<byte[]>> csfArray = new ArrayList<>();
+        ArrayList<GV3CompressedFunction<Long>> csfArray = new ArrayList<>();
         for (int i = 0; i < numChunks; i++) {
             Long[] quantizedIndices = readQuantizedAtIthChunk(quantizedVectorsFilename, byteKeys.size(), i);
-            GV3CompressedFunction<byte[]> csf = buildSingleCsf(byteKeys, quantizedIndices, numChunks);
+            GV3CompressedFunction<Long> csf = buildSingleCsf(byteKeys, quantizedIndices, numChunks);
             csfArray.add(csf);
         }
 
