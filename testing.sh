@@ -1,6 +1,6 @@
-# dataset_name="sift"
-# source_data="sift-128-euclidean.hdf5"
-# M_sizes=(2 4 8 16 32 64)
+dataset_name="sift"
+source_data="sift-128-euclidean.hdf5"
+M_sizes=(2 4 8 16 32 64)
 
 # dataset_name="word2vec"
 # source_data="model.txt"
@@ -49,3 +49,10 @@
 #     ./c/hashing/hashtable ../../data/$dataset_name/testing/testing_M$M &
 # done
 # wait
+
+
+for M in ${M_sizes[@]};
+do
+    python3 python/knn_recall.py $source_data data/$dataset_name/ $M &
+done
+wait
