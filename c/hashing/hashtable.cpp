@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
         }
         map[strkey] = quantized;
 
-        if (i % 3 == 0 && queryKeys.size() < 10000) {
+        if (queryKeys.size() < 10000) {
             queryKeys.push_back(strkey);
         }
         i++;
