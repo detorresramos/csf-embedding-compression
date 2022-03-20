@@ -10,9 +10,9 @@
 # source_data="nytimes-256-angular.hdf5"
 # M_sizes=(2 4 8 16 32 64)
 
-dataset_name="lastfm"
-source_data="lastfm-64-dot.hdf5"
-M_sizes=(2 5 10 15 20)
+# dataset_name="lastfm"
+# source_data="lastfm-64-dot.hdf5"
+# M_sizes=(2 5 10 15 20)
 
 # dataset_name="ABCHeadlines"
 # source_data="abcnews-date-text.csv"
@@ -51,8 +51,11 @@ M_sizes=(2 5 10 15 20)
 # wait
 
 
-for M in ${M_sizes[@]};
-do
-    python3 python/knn_recall.py $source_data data/$dataset_name/ $M &
-done
-wait
+# for M in ${M_sizes[@]};
+# do
+#     python3 python/knn_recall.py $source_data data/$dataset_name/ $M &
+# done
+# wait
+
+
+java -jar embedding.jar data/genomes/genomes_minH_block100.txt data/genomes/result.txt data/genomes
