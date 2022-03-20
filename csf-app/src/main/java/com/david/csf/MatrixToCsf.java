@@ -181,9 +181,9 @@ public class MatrixToCsf {
     }
     public static void main(String args[]) {
         String inputFilename = args[0];
-        String outputFilename = args[1];
-        String dumpBaseName = args[2];
         int numRows = Integer.parseInt(args[1]);
+        String outputFilename = args[2];
+        String dumpBaseName = args[3];
 
         MatrixResult result = readMatrix(inputFilename, numRows);
 
