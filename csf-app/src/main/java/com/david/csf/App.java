@@ -137,7 +137,7 @@ public class App {
         return wordsToEmbeddings;
     }
 
-    static ArrayList<DavesGV3CompressedFunction<byte[]>> buildCsfArray(ArrayList<byte[]> keys,
+    static ArrayList<CustomGV3<byte[]>> buildCsfArray(ArrayList<byte[]> keys,
             final Long[][] csfCentroidIndices, int numCsfs) {
         Iterable<byte[]> keysIterable = keys;
 
@@ -177,10 +177,10 @@ public class App {
 
         final XoRoShiRo128PlusRandom r = new XoRoShiRo128PlusRandom();
         long rando = r.nextLong();
-        ArrayList<DavesGV3CompressedFunction<byte[]>> csfArray = new ArrayList<>();
+        ArrayList<CustomGV3<byte[]>> csfArray = new ArrayList<>();
         for (int i = 0; i < numCsfs; i++) {
             try {
-                DavesGV3CompressedFunction.Builder<byte[]> csf = new DavesGV3CompressedFunction.Builder<>();
+                CustomGV3.Builder<byte[]> csf = new CustomGV3.Builder<>();
                 csf.keys(keysIterable);
                 csf.values(centroidIndicesIterable.get(i));
                 csf.transform(TransformationStrategies.rawByteArray());
@@ -194,7 +194,7 @@ public class App {
     }
 
 
-    private static void outputResults(ArrayList<DavesGV3CompressedFunction<byte[]>> csfArray,
+    private static void outputResults(ArrayList<CustomGV3<byte[]>> csfArray,
             Hashtable<String, ArrayList<Integer>> wordsToEmbeddings, ArrayList<String> keys, int numChunks,
             String outputFilename) {
 
@@ -302,7 +302,7 @@ public class App {
     }
 
 
-    private static void dumpCsfs(ArrayList<DavesGV3CompressedFunction<byte[]>> csfArray, int M, int numChunks, String datasetName) {
+    private static void dumpCsfs(ArrayList<CustomGV3<byte[]>> csfArray, int M, int numChunks, String datasetName) {
 
         for (int i = 0; i < numChunks; i++) {
             try {
@@ -345,7 +345,7 @@ public class App {
 
         // System.setOut(dummyStream);
 
-        ArrayList<DavesGV3CompressedFunction<byte[]>> csfArray = buildCsfArray(byteKeys, result.getCsfCentroidIndices(),
+        ArrayList<CustomGV3<byte[]>> csfArray = buildCsfArray(byteKeys, result.getCsfCentroidIndices(),
                 numChunks);
 
         // build standard java hash table for keys to values

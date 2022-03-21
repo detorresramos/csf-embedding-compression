@@ -131,6 +131,10 @@ public class MatrixToCsf {
 
             int N = result.keys.size();
 
+            System.out.println("N then NumColumns");
+            System.out.println(N);
+            System.out.println(numColumns);
+
             myWriter.write("Total keys = " + N);
 
             myWriter.write("\n\nTesting memory: \n");
@@ -140,24 +144,23 @@ public class MatrixToCsf {
                 bytesForKeys += result.keys.get(i).length();
             }
             bytesForKeys += N * 2; // add 2 bytes per key. one for pointer to key and one for null terminator
-            int bytesForCentroidEmbeddings = N * numColumns; // 1 byte integers
+            int bytesForCentroidEmbeddings = N * numColumns * 8; // 8 byte long
             int bytesForHashtable = bytesForKeys + bytesForCentroidEmbeddings;
 
             // total size of csf array in bits
-            int bytesForCsfArray = 0;
+            double bytesForCsfArray = 0;
             for (int i = 0; i < numColumns; i++) {
-                bytesForCsfArray += (int) Math.round(csfArray.get(i).numBits() / 8.0);
+                bytesForCsfArray += csfArray.get(i).numBits() / 8.0;
             }
 
             double bitsPerElem = (bytesForCsfArray * 8.0) / (numColumns * N);
 
-            // total compression
             float totalCompression = (float) bytesForHashtable / (float) bytesForCsfArray;
 
             myWriter.write("\nBytes embedding keys = ~" + Integer.toString(bytesForKeys));
             myWriter.write("\nBytes for centroid embeddings = ~" + Integer.toString(bytesForCentroidEmbeddings));
             myWriter.write("\nBytes for Java Hashtable = ~" + Integer.toString(bytesForHashtable));
-            myWriter.write("\nBytes for CSF Array = ~" + Integer.toString(bytesForCsfArray));
+            myWriter.write("\nBytes for CSF Array = ~" + Double.toString(bytesForCsfArray));
             myWriter.write("\nBits per elem = ~" + Double.toString(bitsPerElem));
             myWriter.write("\nTotal Compression = ~" + Float.toString(totalCompression));
 
