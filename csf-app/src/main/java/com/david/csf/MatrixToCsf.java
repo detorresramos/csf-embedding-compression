@@ -131,9 +131,11 @@ public class MatrixToCsf {
 
             int N = result.keys.size();
 
-            System.out.println("N then NumColumns");
-            System.out.println(N);
-            System.out.println(numColumns);
+            myWriter.write("N then NumColumns: ");
+            myWriter.write(N);
+            myWriter.write("\n");
+            myWriter.write(numColumns);
+            myWriter.write("\n");
 
             myWriter.write("Total keys = " + N);
 
