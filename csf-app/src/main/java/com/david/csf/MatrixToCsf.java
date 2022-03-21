@@ -60,7 +60,7 @@ public class MatrixToCsf {
 
     private static ArrayList<GV3CompressedFunction<byte[]>> buildCsfArray(ArrayList<byte[]> byteKeys, Long[][] matrix) {
         Iterable<byte[]> keysIterable = byteKeys;
-        int numColumns = matrix[0].length;
+        int numColumns = matrix.length;
 
         ArrayList<LongIterable> columnsIterable = new ArrayList<>();
         for (int i = 0; i < numColumns; i++) {
@@ -114,7 +114,7 @@ public class MatrixToCsf {
     String outputFilename) {
 
 
-        int numColumns = result.matrix[0].length;
+        int numColumns = result.matrix.length;
         try {
             File file = new File(outputFilename);
             if (file.createNewFile()) {
