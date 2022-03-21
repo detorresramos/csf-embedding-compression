@@ -58,4 +58,5 @@
 # wait
 
 
-java -jar embedding.jar data/genomes/genomes_minH_block100.txt data/genomes/result.txt data/genomes
+# java -jar embedding.jar data/genomes/genomes_minH_block100.txt 125367 data/genomes/result.txt data/genomes
+# java -jar embedding.jar data/amazonPolarity/amazon_polarity_test.txt 400000 data/amazonPolarity/result.txt data/amazonPolarity
