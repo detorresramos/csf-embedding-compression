@@ -2,6 +2,8 @@
 
 see testing.sh for how to run 
 
-embedding.jar builds CSFs by reading the whole file into memory first
+embedding.jar builds CSFs from a matrix using the following command:
+java -jar embedding.jar data/genomes/genomes_minH_block100.txt 125367 data/genomes/result.txt data/genomes
 
-embedding1.jar uses less peak memory by reading one column at a time of the file
+the .txt file is the output of numpy.savetxt()
+125367 is the number of rows
