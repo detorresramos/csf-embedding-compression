@@ -148,10 +148,17 @@ public class MatrixToCsf {
             int bytesForCentroidEmbeddings = N * numColumns * 8; // 8 byte long
             int bytesForHashtable = bytesForKeys + bytesForCentroidEmbeddings;
 
+            myWriter.write("CSF Size / N: ");
             // total size of csf array in bits
             double bytesForCsfArray = 0;
             for (int i = 0; i < numColumns; i++) {
-                bytesForCsfArray += csfArray.get(i).numBits() / 8.0;
+                double bytesForCsf = csfArray.get(i).numBits() / 8.0;
+                bytesForCsfArray += bytesForCsf;
+                myWriter.write(Double.toString(bytesForCsf / N) + ", ");
+            }
+            myWriter.write("\nFeatureId: ");
+            for (int i = 0; i < numColumns; i++) {
+                myWriter.write(Integer.toString(i) + ", ");
             }
 
             double bitsPerElem = (bytesForCsfArray * 8.0) / (numColumns * N);
